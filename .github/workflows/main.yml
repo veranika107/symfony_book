@@ -54,7 +54,16 @@ jobs:
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
     - name: Install node_modules
       run: npm ci
+    - name: Cache assets
+      uses: actions/cache@v3
+      id: assets-build-cache
+      with:
+        path: public/build
+        key: ${{ runner.os }}-assets-${{ hashFiles('./assets/**/*.js', './assets/**/*.ts', './assets/**/*.scss', './assets/**/*.json') }}
+        restore-keys: |
+          ${{ runner.os }}-assets-
     - name: Build frontend assets
+      if: steps.assets-build-cache.outputs.cache-hit != 'true'
       run: npm run build
     - name: Create Database
       run: |
