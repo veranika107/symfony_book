@@ -36,6 +36,10 @@ jobs:
       with:
         php-version: ${{ matrix.php-versions }}
     - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 14
+        cache: 'npm'
     - name: Copy .env.test.local
       run: php -r "file_exists('.env.test.local') || copy('.env.test', '.env.test.local');"
     - name: Cache Composer packages
@@ -48,6 +52,10 @@ jobs:
           ${{ runner.os }}-php-
     - name: Install Dependencies
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+    - name: Install node_modules
+      run: npm ci
+    - name: Build frontend assets
+      run: npm run build
     - name: Create Database
       run: |
         php bin/console doctrine:database:drop --force --env=test || true
