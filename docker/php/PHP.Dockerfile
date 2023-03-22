@@ -2,8 +2,6 @@ FROM php:fpm
 
 RUN apt-get -y update
 
-RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/conf.d/php.ini
-
 RUN docker-php-ext-install pdo pdo_mysql
 
 RUN apt-get install -y libicu-dev \
