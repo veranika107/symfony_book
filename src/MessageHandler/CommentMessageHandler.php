@@ -2,11 +2,11 @@
 
 namespace App\MessageHandler;
 
-use App\ImageOptimizer;
 use App\Message\CommentMessage;
 use App\Notification\CommentReviewNotification;
 use App\Repository\CommentRepository;
-use App\SpamChecker;
+use App\Service\ImageOptimizer;
+use App\Service\SpamChecker;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
