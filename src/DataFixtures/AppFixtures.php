@@ -6,15 +6,21 @@ use App\Entity\Admin;
 use App\Entity\Comment;
 use App\Entity\Conference;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 
-class AppFixtures extends Fixture
+class AppFixtures extends Fixture implements FixtureGroupInterface
 {
     public function __construct(
         private PasswordHasherFactoryInterface $passwordHasherFactory,
     ) {
     }
+
+     public static function getGroups(): array
+     {
+         return ['TestFixtures'];
+     }
 
     public function load(ObjectManager $manager): void
     {
