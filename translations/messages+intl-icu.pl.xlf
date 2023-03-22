@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" target-language="pl" datatype="plaintext" original="file.ext">
+    <header>
+      <tool tool-id="symfony" tool-name="Symfony"/>
+    </header>
+    <body>
+      <trans-unit id="eOy4.6V" resname="Conference Guestbook">
+        <source>Conference Guestbook</source>
+        <target>Conference Guestbook</target>
+      </trans-unit>
+      <trans-unit id="Dg2dPd6" resname="nb_of_comments">
+        <source>nb_of_comments</source>
+        <target>{count, plural, =0 {Brak komentarzy.} =1 {1 komentarz.} other {# komentarzy.}}</target>
+      </trans-unit>
+      <trans-unit id="sF2VxiN" resname="Back to top">
+        <source>Back to top</source>
+        <target>Powrót do góry</target>
+      </trans-unit>
+      <trans-unit id="DiImtSN" resname="Welcome">
+        <source>Welcome</source>
+        <target>Witamy</target>
+      </trans-unit>
+      <trans-unit id="YDhYKw3" resname="Give your feedback">
+        <source>Give your feedback</source>
+        <target>Przekaż swoją opinię</target>
+      </trans-unit>
+      <trans-unit id="3Mg5pAF" resname="View">
+        <source>View</source>
+        <target>Zobacz</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
