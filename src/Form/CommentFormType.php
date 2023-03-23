@@ -4,11 +4,11 @@ namespace App\Form;
 
 use App\Entity\Comment;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Image;
 
@@ -36,6 +36,13 @@ class CommentFormType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Comment::class,
+            'empty_data' => function (FormInterface $form) {
+                return new Comment(
+                    author: $form['author']->getData(),
+                    text: $form['text']->getData(),
+                    email: $form['email']->getData(),
+                );
+            }
         ]);
     }
 }

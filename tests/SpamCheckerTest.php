@@ -13,7 +13,7 @@ class SpamCheckerTest extends TestCase
 {
     public function testSpamScoreWithInvalidRequest(): void
     {
-        $comment = new Comment();
+        $comment = new Comment('', '', '');
         $comment->setCreatedAtValue();
         $context = [];
 
@@ -41,7 +41,7 @@ class SpamCheckerTest extends TestCase
 
     public static function provideComments(): iterable
     {
-        $comment = new Comment();
+        $comment = new Comment('', '', '');
         $comment->setCreatedAtValue();
         $context = [];
 

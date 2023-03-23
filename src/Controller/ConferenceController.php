@@ -60,10 +60,10 @@ class ConferenceController extends AbstractController
         #[Autowire('%photo_dir%')] string $photoDir,
     ): Response
     {
-        $comment = new Comment();
-        $form = $this->createForm(CommentFormType::class, $comment);
+        $form = $this->createForm(type: CommentFormType::class);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+            $comment = $form->getData();
             $comment->setConference($conference);
             if ($photo = $form['photo']->getData()) {
                 $filename = bin2hex(random_bytes(6)) . '.' . $photo->guessExtension();

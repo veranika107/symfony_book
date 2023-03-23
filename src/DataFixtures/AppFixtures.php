@@ -18,37 +18,20 @@ class AppFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
-        $amsterdam = new Conference();
-        $amsterdam->setCity('Amsterdam');
-        $amsterdam->setYear('2019');
-        $amsterdam->setIsInternational(true);
+        $amsterdam = new Conference(city: 'Amsterdam', year: '2019', isInternational: true);
         $manager->persist($amsterdam);
 
-        $paris = new Conference();
-        $paris->setCity('Paris');
-        $paris->setYear('2020');
-        $paris->setIsInternational(false);
+        $paris = new Conference(city: 'Paris', year: '2020', isInternational: false);
         $manager->persist($paris);
 
-        $comment1 = new Comment();
-        $comment1->setConference($amsterdam);
-        $comment1->setAuthor('Fabien');
-        $comment1->setEmail('fabien@example.com');
-        $comment1->setText('This was a great conference.');
-        $comment1->setState('published');
+        $comment1 = new Comment(author: 'Fabien', text: 'This was a great conference.', email: 'fabien@example.com', conference: $amsterdam, state: 'published');
         $manager->persist($comment1);
 
-        $comment2 = new Comment();
-        $comment2->setConference($amsterdam);
-        $comment2->setAuthor('Lucas');
-        $comment2->setEmail('lucas@example.com');
-        $comment2->setText('I think this one is going to be moderated.');
+        $comment2 = new Comment(author: 'Lucas', text: 'I think this one is going to be moderated.', email: 'lucas@example.com', conference: $amsterdam);
         $manager->persist($comment2);
 
-        $admin = new Admin();
-        $admin->setRoles(['ROLE_ADMIN']);
-        $admin->setUsername('admin');
-        $admin->setPassword($this->passwordHasherFactory->getPasswordHasher(Admin::class)->hash('admin'));
+        $adminPassword = $this->passwordHasherFactory->getPasswordHasher(Admin::class)->hash('admin');
+        $admin = new Admin(username: 'admin', roles: ['ROLE_ADMIN'], password: $adminPassword);
         $manager->persist($admin);
 
         $manager->flush();

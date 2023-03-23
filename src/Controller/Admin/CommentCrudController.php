@@ -16,6 +16,11 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 
 class CommentCrudController extends AbstractCrudController
 {
+    public function createEntity(string $entityFqcn)
+    {
+        return new $entityFqcn('', '', '');
+    }
+
     public static function getEntityFqcn(): string
     {
         return Comment::class;
