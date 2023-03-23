@@ -30,7 +30,7 @@ class Comment
     private string $email;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt;
+    private \DateTimeImmutable $createdAt;
 
     #[ORM\ManyToOne(inversedBy: 'comments')]
     #[ORM\JoinColumn(nullable: false)]
@@ -39,8 +39,8 @@ class Comment
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $photoFilename;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $state;
+    #[ORM\Column(length: 255)]
+    private string $state;
 
     public function __construct(
         string $author,
@@ -49,13 +49,13 @@ class Comment
         ?\DateTimeImmutable $createdAt = null,
         ?Conference $conference = null,
         ?string $photoFilename = null,
-        ?string $state = 'submitted'
+        string $state = 'submitted'
     )
     {
         $this->author = $author;
         $this->text = $text;
         $this->email = $email;
-        $this->createdAt = $createdAt;
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
         $this->conference = $conference;
         $this->photoFilename = $photoFilename;
         $this->state = $state;
@@ -119,12 +119,6 @@ class Comment
         return $this;
     }
 
-    #[ORM\PrePersist]
-    public function setCreatedAtValue()
-    {
-        $this->createdAt = new \DateTimeImmutable();
-    }
-
     public function getConference(): ?Conference
     {
         return $this->conference;
@@ -149,12 +143,12 @@ class Comment
         return $this;
     }
 
-    public function getState(): ?string
+    public function getState(): string
     {
         return $this->state;
     }
 
-    public function setState(?string $state): self
+    public function setState(string $state): self
     {
         $this->state = $state;
 

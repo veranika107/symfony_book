@@ -14,7 +14,6 @@ class SpamCheckerTest extends TestCase
     public function testSpamScoreWithInvalidRequest(): void
     {
         $comment = new Comment('', '', '');
-        $comment->setCreatedAtValue();
         $context = [];
 
         // MockHttpClient class makes it possible to mock any HTTP server (takes an array of MockResponse instances
@@ -42,7 +41,6 @@ class SpamCheckerTest extends TestCase
     public static function provideComments(): iterable
     {
         $comment = new Comment('', '', '');
-        $comment->setCreatedAtValue();
         $context = [];
 
         $response = new MockResponse('', ['response_headers' => ['x-akismet-pro-tip: discard']]);
