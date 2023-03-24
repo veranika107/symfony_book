@@ -8,15 +8,16 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV7;
 
 #[ORM\Entity(repositoryClass: ConferenceRepository::class)]
 #[UniqueEntity('slug')]
 class Conference
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\Column(type: 'uuid', unique: true)]
+    private UuidV7 $id;
 
     #[ORM\Column(length: 255)]
     private string $city;
@@ -39,6 +40,7 @@ class Conference
         bool $isInternational,
         string $slug = null
     ) {
+        $this->id = Uuid::v7();
         $this->city = $city;
         $this->year = $year;
         $this->isInternational = $isInternational;
@@ -51,7 +53,7 @@ class Conference
         return $this->city . ' ' . $this->year;
     }
 
-    public function getId(): ?int
+    public function getId(): UuidV7
     {
         return $this->id;
     }
