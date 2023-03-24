@@ -14,6 +14,11 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
 class ConferenceCrudController extends AbstractCrudController
 {
+    public function createEntity(string $entityFqcn)
+    {
+        return new $entityFqcn('', '', false);
+    }
+
     public static function getEntityFqcn(): string
     {
         return Conference::class;

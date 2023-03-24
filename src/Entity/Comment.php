@@ -18,29 +18,48 @@ class Comment
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
-    private ?string $author = null;
+    private string $author;
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank]
-    private ?string $text = null;
+    private string $text;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Email]
-    private ?string $email = null;
+    private string $email;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private \DateTimeImmutable $createdAt;
 
     #[ORM\ManyToOne(inversedBy: 'comments')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Conference $conference = null;
+    private ?Conference $conference;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photoFilename = null;
+    private ?string $photoFilename;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $state = 'submitted';
+    #[ORM\Column(length: 255)]
+    private string $state;
+
+    public function __construct(
+        string $author,
+        string $text,
+        string $email,
+        ?\DateTimeImmutable $createdAt = null,
+        ?Conference $conference = null,
+        ?string $photoFilename = null,
+        string $state = 'submitted'
+    )
+    {
+        $this->author = $author;
+        $this->text = $text;
+        $this->email = $email;
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
+        $this->conference = $conference;
+        $this->photoFilename = $photoFilename;
+        $this->state = $state;
+    }
 
     public function __toString(): string
     {
@@ -52,7 +71,7 @@ class Comment
         return $this->id;
     }
 
-    public function getAuthor(): ?string
+    public function getAuthor(): string
     {
         return $this->author;
     }
@@ -64,7 +83,7 @@ class Comment
         return $this;
     }
 
-    public function getText(): ?string
+    public function getText(): string
     {
         return $this->text;
     }
@@ -76,7 +95,7 @@ class Comment
         return $this;
     }
 
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
     }
@@ -100,18 +119,12 @@ class Comment
         return $this;
     }
 
-    #[ORM\PrePersist]
-    public function setCreatedAtValue()
-    {
-        $this->createdAt = new \DateTimeImmutable();
-    }
-
     public function getConference(): ?Conference
     {
         return $this->conference;
     }
 
-    public function setConference(?Conference $conference): self
+    public function setConference(Conference $conference): self
     {
         $this->conference = $conference;
 
@@ -130,12 +143,12 @@ class Comment
         return $this;
     }
 
-    public function getState(): ?string
+    public function getState(): string
     {
         return $this->state;
     }
 
-    public function setState(?string $state): self
+    public function setState(string $state): self
     {
         $this->state = $state;
 
