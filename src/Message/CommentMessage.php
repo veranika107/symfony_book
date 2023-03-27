@@ -2,16 +2,18 @@
 
 namespace App\Message;
 
+use Symfony\Component\Uid\UuidV7;
+
 class CommentMessage
 {
     public function __construct(
-        private int $id,
+        private UuidV7 $id,
         private string $reviewUrl,
         private array $context = [],
     ) {
     }
 
-    public function getId(): int
+    public function getId(): UuidV7
     {
         return $this->id;
     }

@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\CommentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV7;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CommentRepository::class)]
@@ -12,9 +14,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Comment
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\Column(type: 'uuid', unique: true)]
+    private UuidV7 $id;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
@@ -52,6 +53,7 @@ class Comment
         string $state = 'submitted'
     )
     {
+        $this->id = Uuid::v7();
         $this->author = $author;
         $this->text = $text;
         $this->email = $email;
@@ -66,7 +68,7 @@ class Comment
         return (string) $this->getEmail();
     }
 
-    public function getId(): ?int
+    public function getId(): UuidV7
     {
         return $this->id;
     }

@@ -6,14 +6,15 @@ use App\Repository\AdminRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV7;
 
 #[ORM\Entity(repositoryClass: AdminRepository::class)]
 class Admin implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\Column(type: 'uuid', unique: true)]
+    private UuidV7 $id;
 
     #[ORM\Column(length: 180, unique: true)]
     private string $username;
@@ -32,6 +33,7 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
         array $roles,
         string $password
     ) {
+        $this->id = Uuid::v7();
         $this->username = $username;
         $this->roles = $roles;
         $this->password = $password;
@@ -42,7 +44,7 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->username;
     }
 
-    public function getId(): ?int
+    public function getId(): UuidV7
     {
         return $this->id;
     }
