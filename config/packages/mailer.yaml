@@ -3,3 +3,8 @@ framework:
         dsn: '%env(MAILER_DSN)%'
         envelope:
             sender: "%admin_email%"
+
+when@test:
+    framework:
+        mailer:
+            dsn: 'null://null'

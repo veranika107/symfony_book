@@ -3,13 +3,25 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Comment;
+use App\Notification\CommentReviewNotification;
 use App\Repository\CommentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\Notifier\NotifierInterface;
 
 class ConferenceControllerTest extends WebTestCase
 {
-    public function testIndex()
+    public function testRedirectToEnIndex(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/');
+
+        $this->assertInstanceOf(RedirectResponse::class, $client->getResponse());
+        $this->assertTrue($client->getResponse()->isRedirect('/en/'));
+    }
+
+    public function testIndex(): void
     {
         $client = static::createClient();
         $client->request('GET', '/en/');
@@ -18,12 +30,12 @@ class ConferenceControllerTest extends WebTestCase
         $this->assertSelectorTextContains('h2', 'Give your feedback');
     }
 
-    public function testConferencePage()
+    public function testConferencePage(): void
     {
         $client = static::createClient();
         $crawler = $client->request('GET', '/en/');
 
-        $this->assertCount(2, $crawler->filter('h4'));
+        $this->assertCount(3, $crawler->filter('h4'));
 
         $client->clickLink('View');
 
@@ -33,7 +45,7 @@ class ConferenceControllerTest extends WebTestCase
         $this->assertSelectorExists('div:contains("There is one comment")');
     }
 
-    public function testCommentSubmission()
+    public function testCommentSubmission(): void
     {
         $client = static::createClient();
         $client->request('GET', '/en/conference/amsterdam-2019');
@@ -53,5 +65,19 @@ class ConferenceControllerTest extends WebTestCase
         $this->assertResponseRedirects();
         $client->followRedirect();
         $this->assertSelectorExists('div:contains("There are 2 comments")');
+    }
+
+    public function testSendingNotification(): void
+    {
+        $notifier = self::getContainer()->get(NotifierInterface::class);
+
+        $comment = new Comment(author: 'Chad', text: 'This was awesome', email: 'chad@example.com');
+        $notification = new CommentReviewNotification($comment, '/some-url');
+
+        $notifier->send($notification, ...$notifier->getAdminRecipients());
+        $this->assertNotificationCount(1);
+        $notification1 = $this->getNotifierMessage(0);
+        $this->assertNotificationTransportIsEqual($notification1, 'slack');
+        $this->assertEmailCount(1);
     }
 }

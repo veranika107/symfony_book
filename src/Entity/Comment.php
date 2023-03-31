@@ -126,7 +126,7 @@ class Comment
         return $this->conference;
     }
 
-    public function setConference(Conference $conference): self
+    public function setConference(?Conference $conference): self
     {
         $this->conference = $conference;
 
