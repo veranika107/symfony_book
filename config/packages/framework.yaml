@@ -1,8 +1,5 @@
 # see https://symfony.com/doc/current/reference/configuration/framework.html
 framework:
-    notifier:
-        chatter_transports:
-            slack: '%env(SLACK_DSN)%'
     secret: '%env(APP_SECRET)%'
     #csrf_protection: true
     http_method_override: false

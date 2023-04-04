@@ -30,11 +30,32 @@ class AppFixtures extends Fixture implements FixtureGroupInterface
         $paris = new Conference(city: 'Paris', year: '2020', isInternational: false);
         $manager->persist($paris);
 
+        $berlin = new Conference(city: 'Berlin', year: '2021', isInternational: true);
+        $manager->persist($berlin);
+
         $comment1 = new Comment(author: 'Fabien', text: 'This was a great conference.', email: 'fabien@example.com', conference: $amsterdam, state: 'published');
         $manager->persist($comment1);
 
         $comment2 = new Comment(author: 'Lucas', text: 'I think this one is going to be moderated.', email: 'lucas@example.com', conference: $amsterdam);
         $manager->persist($comment2);
+
+        $comment3 = new Comment(author: 'Mike', text: 'Very nice.', email: 'mike@example.com', conference: $berlin, state: 'published');
+        $manager->persist($comment3);
+
+        $comment4 = new Comment(author: 'Louisa', text: 'I have seen better.', email: 'louisa@example.com', conference: $berlin, state: 'published');
+        $manager->persist($comment4);
+
+        $comment5 = new Comment(author: 'Bob', text: 'I like.', email: 'bob@example.com', conference: $berlin, state: 'published');
+        $manager->persist($comment5);
+
+        $comment6 = new Comment(author: 'Spam', text: 'Totally spam.', email: 'spam@example.com', createdAt: new \DateTimeImmutable('2023-01-01 10:10:10'), conference: $berlin, state: 'rejected');
+        $manager->persist($comment6);
+
+        $comment7 = new Comment(author: 'Spam2', text: 'Totally spam.', email: 'spam2@example.com', createdAt: new \DateTimeImmutable('2023-01-01 10:10:10'), conference: $berlin, state: 'spam');
+        $manager->persist($comment7);
+
+        $comment8 = new Comment(author: 'Spam3', text: 'Totally spam.', email: 'spam3@example.com', createdAt: new \DateTimeImmutable('now'), conference: $berlin, state: 'spam');
+        $manager->persist($comment8);
 
         $adminPassword = $this->passwordHasherFactory->getPasswordHasher(Admin::class)->hash('admin');
         $admin = new Admin(username: 'admin', roles: ['ROLE_ADMIN'], password: $adminPassword);
