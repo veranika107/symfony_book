@@ -31,6 +31,6 @@ class CommentReviewNotificationTest extends TestCase
         $channels = $notification->getChannels(new NoRecipient());
 
         $this->assertEqualsCanonicalizing($expectedChannels, $channels);
-        $this->assertEquals($importance, $notification->getImportance());
+        $this->assertSame($importance, $notification->getImportance());
     }
 }

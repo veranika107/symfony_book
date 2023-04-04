@@ -16,8 +16,8 @@ class CommentMessageTest extends TestCase
         $commentMessage = new CommentMessage($uuid, '/url');
         $this->assertInstanceOf(CommentMessage::class, $commentMessage);
 
-        $this->assertEquals($uuid, $commentMessage->getId());
-        $this->assertEquals('/url', $commentMessage->getReviewUrl());
-        $this->assertEquals([], $commentMessage->getContext());
+        $this->assertSame($uuid, $commentMessage->getId());
+        $this->assertSame('/url', $commentMessage->getReviewUrl());
+        $this->assertSame([], $commentMessage->getContext());
     }
 }

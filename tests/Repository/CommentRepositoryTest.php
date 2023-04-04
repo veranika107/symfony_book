@@ -31,7 +31,7 @@ class CommentRepositoryTest extends KernelTestCase
     {
         $oldRejected = $this->commentRepository->countOldRejected();
 
-        $this->assertEquals(2, $oldRejected);
+        $this->assertSame(2, $oldRejected);
     }
 
     public function testDeleteOldRejected(): void
@@ -40,7 +40,7 @@ class CommentRepositoryTest extends KernelTestCase
 
         $oldRejected = $this->commentRepository->countOldRejected();
 
-        $this->assertEquals(0, $oldRejected);
+        $this->assertSame(0, $oldRejected);
     }
 
     public function testGetCommentPaginator(): void

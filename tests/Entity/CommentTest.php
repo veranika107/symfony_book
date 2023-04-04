@@ -15,35 +15,42 @@ class CommentTest extends TestCase
         $this->assertInstanceOf(Comment::class, $comment);
         $this->assertInstanceOf(UuidV7::class, $comment->getId());
         $this->assertInstanceOf(\DateTimeImmutable::class, $comment->getCreatedAt());
-        $this->assertEquals(null, $comment->getConference());
-        $this->assertEquals(null, $comment->getPhotoFilename());
-        $this->assertEquals('submitted', $comment->getState());
+        $this->assertNull($comment->getConference());
+        $this->assertNull($comment->getPhotoFilename());
+        $this->assertSame('submitted', $comment->getState());
     }
 
     public function testProperties(): void
     {
         $comment = new Comment('', '', '');
         $comment->setAuthor('Elza');
-        $this->assertEquals('Elza', $comment->getAuthor());
+        $this->assertSame('Elza', $comment->getAuthor());
 
         $comment->setText('Like');
-        $this->assertEquals('Like', $comment->getText());
+        $this->assertSame('Like', $comment->getText());
 
         $comment->setEmail('elza@example.com');
-        $this->assertEquals('elza@example.com', $comment->getEmail());
+        $this->assertSame('elza@example.com', $comment->getEmail());
 
         $time = new \DateTimeImmutable('now');
         $comment->setCreatedAt($time);
-        $this->assertEquals($time, $comment->getCreatedAt());
+        $this->assertSame($time, $comment->getCreatedAt());
 
         $conference = new Conference('', '' , false);
         $comment->setConference($conference);
-        $this->assertEquals($conference, $comment->getConference());
+        $this->assertSame($conference, $comment->getConference());
 
         $comment->setPhotoFilename('filename.png');
-        $this->assertEquals('filename.png', $comment->getPhotoFilename());
+        $this->assertSame('filename.png', $comment->getPhotoFilename());
 
         $comment->setState('published');
-        $this->assertEquals('published', $comment->getState());
+        $this->assertSame('published', $comment->getState());
+    }
+
+    public function testToString(): void
+    {
+        $comment = new Comment('Jack', 'Dislike', 'jack@example.com');
+
+        $this->assertEquals('jack@example.com', $comment);
     }
 }

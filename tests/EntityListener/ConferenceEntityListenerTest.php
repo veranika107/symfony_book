@@ -23,7 +23,7 @@ class ConferenceEntityListenerTest extends TestCase
         $conference = new Conference('Paris', '2000', false);
         $this->conferenceEntityListener->prePersist($conference, $lifeCycleEvent);
 
-        $this->assertEquals('paris-2000', $conference->getSlug());
+        $this->assertSame('paris-2000', $conference->getSlug());
     }
 
     public function testPreUpdate(): void
@@ -32,6 +32,6 @@ class ConferenceEntityListenerTest extends TestCase
         $conference = new Conference('Paris', '2000', false, '-');
         $this->conferenceEntityListener->preUpdate($conference, $lifeCycleEvent);
 
-        $this->assertEquals('paris-2000', $conference->getSlug());
+        $this->assertSame('paris-2000', $conference->getSlug());
     }
 }

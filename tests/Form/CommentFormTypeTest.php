@@ -36,7 +36,7 @@ class CommentFormTypeTest extends TypeTestCase
         $comment = $form->getData();
 
         $this->assertTrue($form->isSynchronized());
-        $this->assertEquals(true, $form->isValid());
+        $this->assertTrue($form->isValid());
         $this->assertInstanceOf(Comment::class, $comment);
     }
 }

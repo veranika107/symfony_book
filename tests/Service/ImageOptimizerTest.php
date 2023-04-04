@@ -4,22 +4,31 @@ namespace App\Tests\Service;
 
 use App\Service\ImageOptimizer;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 class ImageOptimizerTest extends TestCase
 {
-    const RATIO_MEASUREMENT_ERROR = 0.02;
+    private const RATIO_MEASUREMENT_ERROR = 0.02;
 
-    const MAX_IMAGE_WIDTH = 200;
+    private const MAX_IMAGE_WIDTH = 200;
 
-    const MAX_IMAGE_HEIGHT = 150;
+    private const MAX_IMAGE_HEIGHT = 150;
 
-    public function testResize(): void
+    private function provideImage(): iterable
     {
-        $testImagesDir = dirname(__DIR__, 2) . '/tests/testimages/';
+        yield 'vertical image' => ['vertical'];
+        yield 'horizontal image' => ['horizontal'];
+    }
+
+    /**
+     * @dataProvider provideImage
+     */
+    public function testResize(string $imageRotation): void
+    {
         $imageOptimizer = new ImageOptimizer();
 
-        $initialImage = $testImagesDir . 'image-to-resize.png';
+        $testImagesDir = dirname(__DIR__, 2) . '/tests/asserts/';
+
+        $initialImage = $testImagesDir . 'resize-image-' . $imageRotation . '.png';
         list($initialImageWidth, $initialImageHeight) = getimagesize($initialImage);
         $initialImageRatio = round($initialImageWidth / $initialImageHeight);
 

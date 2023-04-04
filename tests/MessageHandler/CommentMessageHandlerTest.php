@@ -21,6 +21,10 @@ class CommentMessageHandlerTest extends KernelTestCase
 
     private CommentRepository $commentRepository;
 
+    private ImageOptimizer $imageOptimizer;
+
+    private CommentMessageHandler $commentMessageHandler;
+
     protected function setUp(): void
     {
         $this->comment = new Comment('Fred', 'Awesome', 'fred@example.com');
@@ -32,11 +36,17 @@ class CommentMessageHandlerTest extends KernelTestCase
 
         $this->commentRepository = $this->createMock(CommentRepository::class);
         $this->commentRepository->method('save');
+        $this->container->set(CommentRepository::class, $this->commentRepository);
 
         $spamChecker = $this->createMock(SpamChecker::class);
         $spamChecker->method('getSpamScore')
             ->willReturn(2);
         $this->container->set(SpamChecker::class, $spamChecker);
+
+        $this->imageOptimizer = $this->createMock(ImageOptimizer::class);
+        $this->container->set(ImageOptimizer::class, $this->imageOptimizer);
+
+        $this->commentMessageHandler = $this->container->get(CommentMessageHandler::class);
     }
 
     public function testCommentNotNull(): void
@@ -44,13 +54,9 @@ class CommentMessageHandlerTest extends KernelTestCase
         $this->commentRepository->expects($this->once())
             ->method('find')
             ->willReturn(null);
-        $this->container->set(CommentRepository::class, $this->commentRepository);
-
-        /** @var CommentMessageHandler $commentMessageHandler */
-        $commentMessageHandler = $this->container->get(CommentMessageHandler::class);
 
         try {
-            $commentMessageHandler($this->commentMessage);
+            ($this->commentMessageHandler)($this->commentMessage);
         } catch (\Error $e) {
             $this->fail('Comment should not be null');
         }
@@ -75,11 +81,8 @@ class CommentMessageHandlerTest extends KernelTestCase
             ->willReturn($this->comment);
         $this->commentRepository->expects($this->atLeastOnce())
             ->method('save');
-        $this->container->set(CommentRepository::class, $this->commentRepository);
 
-        /** @var CommentMessageHandler $commentMessageHandler */
-        $commentMessageHandler = $this->container->get(CommentMessageHandler::class);
-        $commentMessageHandler($this->commentMessage);
+        ($this->commentMessageHandler)($this->commentMessage);
 
         $commentState = $this->comment->getState();
         $this->assertSame($finalState, $commentState);
@@ -92,11 +95,8 @@ class CommentMessageHandlerTest extends KernelTestCase
         $this->commentRepository->expects($this->once())
             ->method('find')
             ->willReturn($this->comment);
-        $this->container->set(CommentRepository::class, $this->commentRepository);
 
-        /** @var CommentMessageHandler $commentMessageHandler */
-        $commentMessageHandler = $this->container->get(CommentMessageHandler::class);
-        $commentMessageHandler($this->commentMessage);
+        ($this->commentMessageHandler)($this->commentMessage);
 
         $this->assertNotificationCount(1);
     }
@@ -109,15 +109,10 @@ class CommentMessageHandlerTest extends KernelTestCase
         $this->commentRepository->expects($this->once())
             ->method('find')
             ->willReturn($this->comment);
-        $this->container->set(CommentRepository::class, $this->commentRepository);
 
-        $imageOptimizer = $this->createMock(ImageOptimizer::class);
-        $imageOptimizer->expects($this->once())
+        $this->imageOptimizer->expects($this->once())
             ->method('resize');
-        $this->container->set(ImageOptimizer::class, $imageOptimizer);
 
-        /** @var CommentMessageHandler $commentMessageHandler */
-        $commentMessageHandler = $this->container->get(CommentMessageHandler::class);
-        $commentMessageHandler($this->commentMessage);
+        ($this->commentMessageHandler)($this->commentMessage);
     }
 }
