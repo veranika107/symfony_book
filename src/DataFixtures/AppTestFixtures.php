@@ -2,15 +2,15 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\Admin;
 use App\Entity\Comment;
 use App\Entity\Conference;
+use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 
-class AppFixtures extends Fixture implements FixtureGroupInterface
+class AppTestFixtures extends Fixture implements FixtureGroupInterface
 {
     public function __construct(
         private PasswordHasherFactoryInterface $passwordHasherFactory,
@@ -57,8 +57,11 @@ class AppFixtures extends Fixture implements FixtureGroupInterface
         $comment8 = new Comment(author: 'Spam3', text: 'Totally spam.', email: 'spam3@example.com', createdAt: new \DateTimeImmutable('now'), conference: $berlin, state: 'spam');
         $manager->persist($comment8);
 
-        $adminPassword = $this->passwordHasherFactory->getPasswordHasher(Admin::class)->hash('admin');
-        $admin = new Admin(username: 'admin', roles: ['ROLE_ADMIN'], password: $adminPassword);
+        $user = new User(email: 'user@example.com', roles: ['ROLE_COMMENTATOR'], userFirstName: 'User');
+        $manager->persist($user);
+
+        $adminPassword = $this->passwordHasherFactory->getPasswordHasher(User::class)->hash('admin');
+        $admin = new User(email: 'admin@admin.com', roles: ['ROLE_ADMIN'], userFirstName: 'admin', password: $adminPassword);
         $manager->persist($admin);
 
         $manager->flush();

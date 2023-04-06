@@ -44,3 +44,5 @@ when@test:
             public: true
         App\Service\ImageOptimizer:
             public: true
+        App\Repository\UserRepository:
+            public: true

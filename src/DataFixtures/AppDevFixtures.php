@@ -2,9 +2,9 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\Admin;
 use App\Entity\Comment;
 use App\Entity\Conference;
+use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -36,8 +36,8 @@ class AppDevFixtures extends Fixture implements FixtureGroupInterface
         $comment2 = new Comment(author: 'Igor', text: 'I think this one is going to be moderated.', email: 'lucas@example.com', conference: $minsk, state: 'published');
         $manager->persist($comment2);
 
-        $adminPassword = $this->passwordHasherFactory->getPasswordHasher(Admin::class)->hash('admin');
-        $admin = new Admin(username: 'admin', roles: ['ROLE_ADMIN'], password: $adminPassword);
+        $adminPassword = $this->passwordHasherFactory->getPasswordHasher(User::class)->hash('admin');
+        $admin = new User(email: 'admin@admin.com', roles: ['ROLE_ADMIN'], userFirstName: 'admin', password: $adminPassword);
         $manager->persist($admin);
 
         $manager->flush();

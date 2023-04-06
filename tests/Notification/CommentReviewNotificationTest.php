@@ -5,8 +5,6 @@ namespace App\Tests\Notification;
 use App\Entity\Comment;
 use App\Notification\CommentReviewNotification;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Notifier\Channel\EmailChannel;
-use Symfony\Component\Notifier\Message\ChatMessage;
 use Symfony\Component\Notifier\Notification\Notification;
 use Symfony\Component\Notifier\Recipient\NoRecipient;
 
