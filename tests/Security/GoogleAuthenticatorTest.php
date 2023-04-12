@@ -11,7 +11,6 @@ use League\OAuth2\Client\Provider\GoogleUser;
 use League\OAuth2\Client\Token\AccessToken;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 
@@ -20,8 +19,6 @@ class GoogleAuthenticatorTest extends TestCase
     private GoogleAuthenticator $googleAuthenticator;
 
     private ClientRegistry $clientRegistry;
-
-    private RouterInterface $router;
 
     private UserRepository $userRepository;
 
@@ -33,14 +30,9 @@ class GoogleAuthenticatorTest extends TestCase
 
         $this->clientRegistry = $this->createMock(ClientRegistry::class);
 
-        $context = $this->createMock(RequestContext::class);
-        $context->method('getParameters')
-            ->willReturn(['_locale' => 'en']);
+        $router = $this->createMock(RouterInterface::class);
 
-
-        $this->router = $this->createMock(RouterInterface::class);
-
-        $this->googleAuthenticator = new GoogleAuthenticator($this->clientRegistry, $this->router, $this->userRepository);
+        $this->googleAuthenticator = new GoogleAuthenticator($this->clientRegistry, $router, $this->userRepository);
 
         $this->request = $this->createMock(Request::class);
     }
@@ -94,7 +86,7 @@ class GoogleAuthenticatorTest extends TestCase
 
         $this->userRepository->expects($this->once())
             ->method('findOneBy')
-            ->willReturn(false);
+            ->willReturn(null);
         $this->userRepository->expects($this->once())
             ->method('save');
 
@@ -102,11 +94,10 @@ class GoogleAuthenticatorTest extends TestCase
 
         $this->assertInstanceOf(SelfValidatingPassport::class, $passport);
 
-        $expecting = new User('user@example.com', ['ROLE_COMMENTATOR'], 'FirstName', 'LastName');
         $user = $passport->getUser();
         $this->assertInstanceOf(User::class, $user);
         $this->assertSame('user@example.com', $user->getEmail());
-        $this->assertSame(['ROLE_COMMENTATOR', 'ROLE_USER'], $user->getRoles());
+        $this->assertSame(['ROLE_USER'], $user->getRoles());
         $this->assertSame('FirstName', $user->getUserFirstName());
         $this->assertSame('LastName', $user->getUserLastName());
     }

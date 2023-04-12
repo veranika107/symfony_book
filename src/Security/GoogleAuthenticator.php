@@ -8,8 +8,6 @@ use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Client\Provider\GoogleClient;
 use KnpU\OAuth2ClientBundle\Security\Authenticator\OAuth2Authenticator;
 use League\OAuth2\Client\Provider\GoogleUser;
-use Symfony\Bundle\FrameworkBundle\Routing\Router;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -54,7 +52,7 @@ class GoogleAuthenticator extends OAuth2Authenticator implements AuthenticationE
                 }
 
                 // Create a user object if such a user doesn't exist.
-                $user = new User(email: $email, roles: User::USER_COMMENTATOR_ROLE, userFirstName: $userFirstName, userLastName: $userLastName);
+                $user = new User(email: $email, userFirstName: $userFirstName, userLastName: $userLastName);
                 $this->userRepository->save($user, true);
 
                 return $user;

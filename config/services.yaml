@@ -46,3 +46,8 @@ when@test:
             public: true
         App\Repository\UserRepository:
             public: true
+        KnpU\OAuth2ClientBundle\Client\ClientRegistry:
+            arguments:
+                $container: '@service_container'
+                $serviceMap: []
+            public: true

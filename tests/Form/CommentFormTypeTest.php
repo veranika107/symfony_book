@@ -45,7 +45,7 @@ class CommentFormTypeTest extends TypeTestCase
 
     public function testSubmitValidData()
     {
-        $user = new User(email: 'user@example.com', roles: ['ROLE_COMMENTATOR'], userFirstName: 'User');
+        $user = new User(email: 'user@example.com', userFirstName: 'User');
         $this->security->expects($this->once())
             ->method('getUser')
             ->willReturn($user);

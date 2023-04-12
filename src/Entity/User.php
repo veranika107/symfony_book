@@ -12,10 +12,6 @@ use Symfony\Component\Uid\UuidV7;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    public const USER_COMMENTATOR_ROLE = ['ROLE_COMMENTATOR'];
-
-    public const USER_ADMIN_ROLE = ['ROLE_ADMIN'];
-
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
     private UuidV7 $id;
@@ -40,14 +36,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct(
         string $email,
-        array $roles,
+        array $roles = [],
         string $userFirstName = null,
         string $userLastName = null,
         string $password = '',
     ) {
         $this->id = Uuid::v7();
         $this->email = $email;
-        $this->roles = $roles;
+        $this->roles = $roles ?: ['ROLE_USER'];
         $this->userFirstName = $userFirstName;
         $this->userLastName = $userLastName;
         $this->password = $password;
