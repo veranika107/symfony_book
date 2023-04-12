@@ -68,6 +68,20 @@
             "ref": "b131e6cbfe1b898a508987851963fff485986285"
         }
     },
+    "gesdinet/jwt-refresh-token-bundle": {
+        "version": "1.1",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.0",
+            "ref": "13fb2b58ec6204211815eb6f4c69e4918e5af617"
+        },
+        "files": [
+            "config/packages/gesdinet_jwt_refresh_token.yaml",
+            "config/routes/gesdinet_jwt_refresh_token.yaml",
+            "src/Entity/RefreshToken.php"
+        ]
+    },
     "knpuniversity/oauth2-client-bundle": {
         "version": "2.14",
         "recipe": {
@@ -78,6 +92,18 @@
         },
         "files": [
             "config/packages/knpu_oauth2_client.yaml"
+        ]
+    },
+    "lexik/jwt-authentication-bundle": {
+        "version": "2.18",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "2.5",
+            "ref": "e9481b233a11ef7e15fe055a2b21fd3ac1aa2bb7"
+        },
+        "files": [
+            "config/packages/lexik_jwt_authentication.yaml"
         ]
     },
     "phpunit/phpunit": {
