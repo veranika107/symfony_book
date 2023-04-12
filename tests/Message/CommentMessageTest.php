@@ -2,8 +2,6 @@
 
 namespace App\Tests\Message;
 
-use App\Entity\Comment;
-use App\Entity\Conference;
 use App\Message\CommentMessage;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\UuidV7;

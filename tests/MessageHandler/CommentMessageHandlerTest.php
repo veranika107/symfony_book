@@ -17,8 +17,6 @@ class CommentMessageHandlerTest extends KernelTestCase
 
     private CommentMessage $commentMessage;
 
-    private ContainerInterface $container;
-
     private CommentRepository $commentRepository;
 
     private ImageOptimizer $imageOptimizer;
@@ -32,21 +30,21 @@ class CommentMessageHandlerTest extends KernelTestCase
         $this->commentMessage = new CommentMessage($this->comment->getId(), '/review-url');
 
         self::bootKernel();
-        $this->container = static::getContainer();
+        $container = static::getContainer();
 
         $this->commentRepository = $this->createMock(CommentRepository::class);
         $this->commentRepository->method('save');
-        $this->container->set(CommentRepository::class, $this->commentRepository);
+        $container->set(CommentRepository::class, $this->commentRepository);
 
         $spamChecker = $this->createMock(SpamChecker::class);
         $spamChecker->method('getSpamScore')
             ->willReturn(2);
-        $this->container->set(SpamChecker::class, $spamChecker);
+        $container->set(SpamChecker::class, $spamChecker);
 
         $this->imageOptimizer = $this->createMock(ImageOptimizer::class);
-        $this->container->set(ImageOptimizer::class, $this->imageOptimizer);
+        $container->set(ImageOptimizer::class, $this->imageOptimizer);
 
-        $this->commentMessageHandler = $this->container->get(CommentMessageHandler::class);
+        $this->commentMessageHandler = $container->get(CommentMessageHandler::class);
     }
 
     public function testCommentNotNull(): void

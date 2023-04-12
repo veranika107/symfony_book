@@ -62,8 +62,13 @@
                 <h3 class="font-weight-light">
                     Add your own feedback
                 </h3>
-
-                {{ form(comment_form) }}
+                {% if is_granted('ROLE_USER') %}
+                    {{ form(comment_form) }}
+                {% else %}
+                    <span class="fw-normal fs-6 text-muted">
+                        Only authorized users can leave comments. <br>Please <a href="{{ path('app_login') }}">Login</a>.
+                    </span>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -2,25 +2,31 @@
 
 namespace App\Entity;
 
-use App\Repository\AdminRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Uid\UuidV7;
 
-#[ORM\Entity(repositoryClass: AdminRepository::class)]
-class Admin implements UserInterface, PasswordAuthenticatedUserInterface
+#[ORM\Entity(repositoryClass: UserRepository::class)]
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
     private UuidV7 $id;
 
     #[ORM\Column(length: 180, unique: true)]
-    private string $username;
+    private string $email;
 
     #[ORM\Column]
     private array $roles;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $userFirstName;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $userLastName;
 
     /**
      * @var string The hashed password
@@ -29,19 +35,23 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
     private string $password;
 
     public function __construct(
-        string $username,
-        array $roles,
-        string $password
+        string $email,
+        array $roles = [],
+        string $userFirstName = null,
+        string $userLastName = null,
+        string $password = '',
     ) {
         $this->id = Uuid::v7();
-        $this->username = $username;
-        $this->roles = $roles;
+        $this->email = $email;
+        $this->roles = $roles ?: ['ROLE_USER'];
+        $this->userFirstName = $userFirstName;
+        $this->userLastName = $userLastName;
         $this->password = $password;
     }
 
     public function __toString(): string
     {
-        return $this->username;
+        return $this->email;
     }
 
     public function getId(): UuidV7
@@ -49,14 +59,14 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function getUsername(): string
+    public function getEmail(): string
     {
-        return $this->username;
+        return $this->email;
     }
 
-    public function setUsername(string $username): self
+    public function setEmail(string $email): self
     {
-        $this->username = $username;
+        $this->email = $email;
 
         return $this;
     }
@@ -68,7 +78,7 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->username;
+        return (string) $this->email;
     }
 
     /**
@@ -86,6 +96,30 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function getUserFirstName(): ?string
+    {
+        return $this->userFirstName;
+    }
+
+    public function setUserFirstName(?string $userFirstName): self
+    {
+        $this->userFirstName = $userFirstName;
+
+        return $this;
+    }
+
+    public function getUserLastName(): ?string
+    {
+        return $this->userLastName;
+    }
+
+    public function setUserLastName(?string $userLastName): self
+    {
+        $this->userLastName = $userLastName;
 
         return $this;
     }
