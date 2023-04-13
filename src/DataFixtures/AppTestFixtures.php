@@ -57,7 +57,7 @@ class AppTestFixtures extends Fixture implements FixtureGroupInterface
         $comment8 = new Comment(author: 'Spam3', text: 'Totally spam.', email: 'spam3@example.com', createdAt: new \DateTimeImmutable('now'), conference: $berlin, state: 'spam');
         $manager->persist($comment8);
 
-        $user = new User(email: 'user@example.com', userFirstName: 'User');
+        $user = new User(email: 'user@example.com', userFirstName: 'User', password: '$2y$13$YX8f8dQYgDoFF54KLUpaS..SZLtoN6TUqwubr.bl1A6xG9.t30xqC');
         $manager->persist($user);
 
         $adminPassword = $this->passwordHasherFactory->getPasswordHasher(User::class)->hash('admin');
