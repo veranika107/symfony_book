@@ -3,3 +3,9 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+
+api_auth:
+    path: /api/auth
+
+api_refresh:
+    path: /api/auth/refresh

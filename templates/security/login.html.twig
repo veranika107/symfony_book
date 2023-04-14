@@ -17,6 +17,9 @@
         <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
         <label for="inputEmail">Email</label>
         <input type="email" value="{{ last_email }}" name="email" id="inputEmail" class="form-control" autocomplete="email" required autofocus>
+        <div class="fw-normal fs-6 text-muted">
+            <a href="{{ path('app_forgot_password_request') }}">Forgot password?</a>
+        </div>
         <label for="inputPassword">Password</label>
         <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
 
@@ -39,7 +42,7 @@
             Sign in
         </button>
     </form>
-    <span class="fw-normal fs-6 text-muted">
+    <div class="fw-normal fs-6 text-muted">
         Or <a href="{{ path('connect_google_start') }}">Login via Google</a>.
-    </span>
+    </div>
 {% endblock %}
