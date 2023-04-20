@@ -3,15 +3,17 @@
 namespace App\Tests\Security;
 
 use App\Entity\User;
-use App\Repository\UserRepository;
 use App\Security\GoogleAuthenticator;
+use App\Service\Google\GoogleUserManager;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Client\Provider\GoogleClient;
 use League\OAuth2\Client\Provider\GoogleUser;
 use League\OAuth2\Client\Token\AccessToken;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 
 class GoogleAuthenticatorTest extends TestCase
@@ -20,19 +22,23 @@ class GoogleAuthenticatorTest extends TestCase
 
     private ClientRegistry $clientRegistry;
 
-    private UserRepository $userRepository;
+    private GoogleUserManager $googleUserManager;
+
+    private LoggerInterface $logger;
 
     private Request $request;
 
     public function setUp(): void
     {
-        $this->userRepository = $this->createMock(UserRepository::class);
-
         $this->clientRegistry = $this->createMock(ClientRegistry::class);
 
         $router = $this->createMock(RouterInterface::class);
 
-        $this->googleAuthenticator = new GoogleAuthenticator($this->clientRegistry, $router, $this->userRepository);
+        $this->googleUserManager = $this->createMock(GoogleUserManager::class);
+
+        $this->logger = $this->createMock(LoggerInterface::class);
+
+        $this->googleAuthenticator = new GoogleAuthenticator($this->clientRegistry, $router, $this->googleUserManager, $this->logger);
 
         $this->request = $this->createMock(Request::class);
     }
@@ -46,7 +52,7 @@ class GoogleAuthenticatorTest extends TestCase
 
     private function setMocksForAuthenticate(): void
     {
-        $googleUser = new GoogleUser(['email' => 'user@example.com', 'given_name' => 'FirstName', 'family_name' => 'LastName']);
+        $googleUser = new GoogleUser([]);
 
         $accessToken = $this->createMock(AccessToken::class);
         $accessToken->method('getToken')
@@ -63,16 +69,14 @@ class GoogleAuthenticatorTest extends TestCase
             ->willReturn($client);
     }
 
-    public function testAuthenticateExistingUser(): void
+    public function testAuthenticate(): void
     {
         $this->setMocksForAuthenticate();
 
         $user = new User(email: 'user@example.com', roles: []);
-        $this->userRepository->expects($this->once())
-            ->method('findOneBy')
+        $this->googleUserManager->expects($this->once())
+            ->method('getUserFromGoogleUser')
             ->willReturn($user);
-        $this->userRepository->expects($this->never())
-            ->method('save');
 
         $passport = $this->googleAuthenticator->authenticate($this->request);
 
@@ -80,25 +84,18 @@ class GoogleAuthenticatorTest extends TestCase
         $this->assertSame($user, $passport->getUser());
     }
 
-    public function testAuthenticateNewUser(): void
+    public function testAuthenticateInvalidGoogleEmail(): void
     {
         $this->setMocksForAuthenticate();
 
-        $this->userRepository->expects($this->once())
-            ->method('findOneBy')
-            ->willReturn(null);
-        $this->userRepository->expects($this->once())
-            ->method('save');
+        $this->googleUserManager->expects($this->once())
+            ->method('getUserFromGoogleUser')
+            ->willThrowException(new \UnexpectedValueException());
 
-        $passport = $this->googleAuthenticator->authenticate($this->request);
+        $this->logger->expects($this->once())
+            ->method('error');
 
-        $this->assertInstanceOf(SelfValidatingPassport::class, $passport);
-
-        $user = $passport->getUser();
-        $this->assertInstanceOf(User::class, $user);
-        $this->assertSame('user@example.com', $user->getEmail());
-        $this->assertSame(['ROLE_USER'], $user->getRoles());
-        $this->assertSame('FirstName', $user->getUserFirstName());
-        $this->assertSame('LastName', $user->getUserLastName());
+        $this->expectException(AuthenticationException::class);
+        $this->googleAuthenticator->authenticate($this->request)->getUser();
     }
 }
