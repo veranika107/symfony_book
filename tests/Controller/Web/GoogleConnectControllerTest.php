@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\Controller;
+namespace App\Tests\Controller\Web;
 
 use App\Entity\User;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;

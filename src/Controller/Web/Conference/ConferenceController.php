@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Web\Conference;
 
 use App\Entity\Conference;
 use App\Form\CommentFormType;
