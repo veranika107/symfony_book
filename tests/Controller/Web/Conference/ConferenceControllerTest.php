@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\Controller;
+namespace App\Tests\Controller\Web\Conference;
 
 use App\Entity\Comment;
 use App\Notification\CommentReviewNotification;
@@ -56,7 +56,7 @@ class ConferenceControllerTest extends WebTestCase
         $client->request('GET', '/en/conference/amsterdam-2019');
         $client->submitForm('Submit', [
             'comment_form[text]' => 'Some feedback from an automated functional test',
-            'comment_form[photo]' => dirname(__DIR__, 2).'/public/images/under-construction.gif',
+            'comment_form[photo]' => dirname(__DIR__, 4).'/public/images/under-construction.gif',
         ]);
 
         $email = $testUser->getEmail();
@@ -69,7 +69,7 @@ class ConferenceControllerTest extends WebTestCase
 
         $photo = $comment->getPhotoFilename();
         $photoNameWithoutExtension = basename($photo, '.gif');
-        $this->assertTrue(file_exists(dirname(__DIR__, 2) . '/public/uploads/photos/' . $photo));
+        $this->assertTrue(file_exists(dirname(__DIR__, 4) . '/public/uploads/photos/' . $photo));
         $this->assertTrue(ctype_xdigit($photoNameWithoutExtension));
 
         $this->assertResponseRedirects();
