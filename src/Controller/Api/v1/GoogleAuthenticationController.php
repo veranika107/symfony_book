@@ -14,7 +14,6 @@ use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use UnexpectedValueException;
 
 class GoogleAuthenticationController extends AbstractController
 {
@@ -31,7 +30,7 @@ class GoogleAuthenticationController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $accessToken = $data ? $data['token'] : null;
         if (!$accessToken) {
-            return $this->json('Code parameter is missing.', Response::HTTP_BAD_REQUEST);
+            return $this->json('Token parameter is missing.', Response::HTTP_BAD_REQUEST);
         }
 
         $client = $clientRegistry->getClient('google');
@@ -42,11 +41,7 @@ class GoogleAuthenticationController extends AbstractController
             return $this->json('Access token is invalid.', Response::HTTP_FORBIDDEN);
         }
 
-        try {
-            $user = $googleUserManager->getUserFromGoogleUser($googleUser);
-        } catch (UnexpectedValueException $exception) {
-            return $this->json($exception->getMessage(), Response::HTTP_FORBIDDEN);
-        }
+        $user = $googleUserManager->getUserFromGoogleUser($googleUser);
 
         // Create access and refresh token for the user.
         $appAccessToken = $JWTManager->create($user);

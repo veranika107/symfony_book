@@ -52,11 +52,4 @@ class GoogleUserManagerTest extends TestCase
         $this->assertSame('FirstName', $user->getUserFirstName());
         $this->assertSame('LastName', $user->getUserLastName());
     }
-
-    public function testCreateUserFromGoogleUserWithInvalidGoogleEmail(): void {
-        $googleUser = new GoogleUser(['email' => null]);
-
-        $this->expectException(\UnexpectedValueException::class);
-        $this->googleUserManager->getUserFromGoogleUser($googleUser);
-    }
 }

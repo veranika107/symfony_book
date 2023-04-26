@@ -43,7 +43,7 @@ class GoogleAuthenticationControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $this->assertSame(json_encode('Code parameter is missing.'), $response->getContent());
+        $this->assertSame(json_encode('Token parameter is missing.'), $response->getContent());
     }
 
     public function testAuthWithGoogleWithInvalidToken(): void
@@ -64,27 +64,5 @@ class GoogleAuthenticationControllerTest extends WebTestCase
 
         $this->assertSame(Response::HTTP_FORBIDDEN, $response->getStatusCode());
         $this->assertSame(json_encode('Access token is invalid.'), $response->getContent());
-    }
-
-    public function testAuthWithGoogleWithInvalidGoogleEmail(): void
-    {
-        $client = static::createClient();
-
-        $googleUser = new GoogleUser([]);
-
-        $container = static::getContainer();
-        $googleClient = $this->createMock(GoogleClient::class);
-        $googleClient->method('fetchUserFromToken')
-            ->willReturn($googleUser);
-        $clientRegistry = $this->createMock(ClientRegistry::class);
-        $clientRegistry->method('getClient')
-            ->willReturn($googleClient);
-        $container->set(ClientRegistry::class, $clientRegistry);
-
-        $client->jsonRequest('POST', '/api/auth/google', ['token' => 'some_token']);
-        $response = $client->getResponse();
-
-        $this->assertSame(Response::HTTP_FORBIDDEN, $response->getStatusCode());
-        $this->assertSame(json_encode('Google user email should not be empty.'), $response->getContent());
     }
 }

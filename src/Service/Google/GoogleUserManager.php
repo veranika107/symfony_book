@@ -16,9 +16,6 @@ class GoogleUserManager
     public function getUserFromGoogleUser(GoogleUser $googleUser): User
     {
         $email = $googleUser->getEmail();
-        if (!$email) {
-            throw new UnexpectedValueException('Google user email should not be empty.');
-        }
         $userFirstName = $googleUser->getFirstName();
         $userLastName = $googleUser->getLastName();
 
