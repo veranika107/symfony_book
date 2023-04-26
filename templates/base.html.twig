@@ -29,12 +29,19 @@
 
                     <div class="collapse navbar-collapse" id="header-menu">
                         <ul class="navbar-nav ms-auto">
-                            <li class="nav-item me-3">
-                                <a class="nav-link" href="{{ path('admin') }}">
-                                    Admin
-                                </a>
-                            </li>
-                            <li class="nav-item dropdown">
+                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                    <span class="navbar-text text-dark me-5">
+                                        Hi, {{ app.user.userFirstName }}!
+                                    </span>
+                            {% endif %}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <li class="nav-item me-2">
+                                    <a class="nav-link" href="{{ path('admin') }}">
+                                        Admin Panel
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li class="nav-item dropdown me-2">
                                 <a class="nav-link dropdown-toggle" href="#" id="dropdown-language" role="button"
                                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     {{ app.request.locale|locale_name(app.request.locale)|u.title }}
@@ -44,6 +51,19 @@
                                     <li><a class="dropdown-item" href="{{ path('homepage', {_locale: 'pl'}) }}">Polski</a></li>
                                 </ul>
                             </li>
+                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                <li class="nav-item me-3">
+                                    <a class="nav-link" href="{{ path('app_logout') }}">
+                                        Logout
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="nav-item me-3">
+                                    <a class="nav-link" href="{{ path('app_login') }}">
+                                        Login
+                                    </a>
+                                </li>
+                            {% endif %}
                         </ul>
                     </div>
                 </div>

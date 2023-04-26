@@ -2,12 +2,11 @@
 
 namespace App\MessageHandler;
 
-use App\ImageOptimizer;
 use App\Message\CommentMessage;
 use App\Notification\CommentReviewNotification;
 use App\Repository\CommentRepository;
-use App\SpamChecker;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\ImageOptimizer;
+use App\Service\SpamChecker;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -19,7 +18,6 @@ use Symfony\Component\Workflow\WorkflowInterface;
 class CommentMessageHandler
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
         private SpamChecker $spamChecker,
         private CommentRepository $commentRepository,
         private MessageBusInterface $bus,
@@ -47,7 +45,7 @@ class CommentMessageHandler
             };
 
             $this->commentStateMachine->apply($comment, $transition);
-            $this->entityManager->flush();
+            $this->commentRepository->save($comment, true);
             $this->bus->dispatch($message);
         } elseif ($this->commentStateMachine->can($comment, 'publish') || $this->commentStateMachine->can($comment, 'publish_ham')) {
             $notification = new CommentReviewNotification($comment, $message->getReviewUrl());
@@ -57,7 +55,7 @@ class CommentMessageHandler
                 $this->imageOptimizer->resize($this->photoDir . '/' . $comment->getPhotoFilename());
             }
             $this->commentStateMachine->apply($comment, 'optimize');
-            $this->entityManager->flush();
+            $this->commentRepository->save($comment, true);
         } elseif ($this->logger) {
             $this->logger->debug('Dropping comment message', ['comment' => $comment->getId(), 'state' => $comment->getState()]);
         }

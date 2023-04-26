@@ -8,34 +8,44 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV7;
 
 #[ORM\Entity(repositoryClass: ConferenceRepository::class)]
 #[UniqueEntity('slug')]
 class Conference
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\Column(type: 'uuid', unique: true)]
+    private UuidV7 $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $city = null;
+    private string $city;
 
     #[ORM\Column(length: 4)]
-    private ?string $year = null;
+    private string $year;
 
     #[ORM\Column]
-    private ?bool $isInternational = null;
+    private bool $isInternational;
 
     #[ORM\OneToMany(mappedBy: 'conference', targetEntity: Comment::class, orphanRemoval: true)]
     private Collection $comments;
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
-    private ?string $slug = null;
+    private ?string $slug;
 
-    public function __construct()
-    {
+    public function __construct(
+        string $city,
+        string $year,
+        bool $isInternational,
+        string $slug = null
+    ) {
+        $this->id = Uuid::v7();
+        $this->city = $city;
+        $this->year = $year;
+        $this->isInternational = $isInternational;
         $this->comments = new ArrayCollection();
+        $this->slug = $slug;
     }
 
     public function __toString(): string
@@ -43,7 +53,7 @@ class Conference
         return $this->city . ' ' . $this->year;
     }
 
-    public function getId(): ?int
+    public function getId(): UuidV7
     {
         return $this->id;
     }
@@ -55,7 +65,7 @@ class Conference
         }
     }
 
-    public function getCity(): ?string
+    public function getCity(): string
     {
         return $this->city;
     }
@@ -67,7 +77,7 @@ class Conference
         return $this;
     }
 
-    public function getYear(): ?string
+    public function getYear(): string
     {
         return $this->year;
     }
@@ -79,7 +89,7 @@ class Conference
         return $this;
     }
 
-    public function isIsInternational(): ?bool
+    public function isIsInternational(): bool
     {
         return $this->isInternational;
     }

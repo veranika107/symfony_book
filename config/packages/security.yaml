@@ -7,22 +7,41 @@ security:
         # used to reload user from session & other features (e.g. switch_user)
         app_user_provider:
             entity:
-                class: App\Entity\Admin
-                property: username
+                class: App\Entity\User
+                property: email
+        # used to reload user from session & other features (e.g. switch_user)
+    enable_authenticator_manager: true
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+
+        api:
+            pattern: ^/api
+            stateless: true
+            json_login:
+                check_path: api_auth
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            jwt: ~
+            entry_point: jwt
+            refresh_jwt:
+                check_path: api_refresh
+
         main:
             lazy: true
             provider: app_user_provider
-            custom_authenticator: App\Security\AppAuthenticator
+            custom_authenticators:
+                - App\Security\AppAuthenticator
+                - App\Security\GoogleAuthenticator
             http_basic: { realm: Admin Area }
             entry_point: App\Security\AppAuthenticator
             logout:
                 path: app_logout
                 # where to redirect after logout
-                # target: app_any_route
+                target: homepage
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -34,7 +53,12 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/auth, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/google, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_USER
 
 when@test:
     security:

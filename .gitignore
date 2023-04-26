@@ -4,6 +4,7 @@
 /.env.local.php
 /.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
+/config/secrets/dev/dev.decrypt.private.php
 /public/bundles/
 /var/
 /vendor/
@@ -27,3 +28,11 @@
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
+
+###> docker ###
+docker-compose.override.yaml
+###< docker ###
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###

@@ -26,7 +26,7 @@
             "repo": "github.com/symfony/recipes",
             "branch": "main",
             "version": "2.8",
-            "ref": "719d615af3150a59a02acc97c285d689e5dcf43f"
+            "ref": "6b43b7b6ff6bf2551f2933ebeb66721fa3db8fbc"
         },
         "files": [
             "config/packages/doctrine.yaml",
@@ -68,6 +68,56 @@
             "ref": "b131e6cbfe1b898a508987851963fff485986285"
         }
     },
+    "gesdinet/jwt-refresh-token-bundle": {
+        "version": "1.1",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.0",
+            "ref": "13fb2b58ec6204211815eb6f4c69e4918e5af617"
+        },
+        "files": [
+            "config/packages/gesdinet_jwt_refresh_token.yaml",
+            "config/routes/gesdinet_jwt_refresh_token.yaml",
+            "src/Entity/RefreshToken.php"
+        ]
+    },
+    "knpuniversity/oauth2-client-bundle": {
+        "version": "2.14",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.20",
+            "ref": "1ff300d8c030f55c99219cc55050b97a695af3f6"
+        },
+        "files": [
+            "config/packages/knpu_oauth2_client.yaml"
+        ]
+    },
+    "lexik/jwt-authentication-bundle": {
+        "version": "2.18",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "2.5",
+            "ref": "e9481b233a11ef7e15fe055a2b21fd3ac1aa2bb7"
+        },
+        "files": [
+            "config/packages/lexik_jwt_authentication.yaml"
+        ]
+    },
+    "nelmio/cors-bundle": {
+        "version": "2.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "1.5",
+            "ref": "6bea22e6c564fba3a1391615cada1437d0bde39c"
+        },
+        "files": [
+            "config/packages/nelmio_cors.yaml"
+        ]
+    },
     "phpunit/phpunit": {
         "version": "9.6",
         "recipe": {
@@ -82,16 +132,16 @@
             "tests/bootstrap.php"
         ]
     },
-    "sensio/framework-extra-bundle": {
-        "version": "6.2",
+    "sentry/sentry-symfony": {
+        "version": "4.7",
         "recipe": {
-            "repo": "github.com/symfony/recipes",
+            "repo": "github.com/symfony/recipes-contrib",
             "branch": "main",
-            "version": "5.2",
-            "ref": "fb7e19da7f013d0d422fa9bce16f5c510e27609b"
+            "version": "4.6",
+            "ref": "f7b4706a3e8a6f096b7392f3146f4f7f65ff594c"
         },
         "files": [
-            "config/packages/sensio_framework_extra.yaml"
+            "config/packages/sentry.yaml"
         ]
     },
     "symfony/console": {
@@ -339,7 +389,7 @@
             "ref": "f8fc53f1942f76679e9ee3c25fd44865355707b5"
         },
         "files": [
-            "assets/app.js",
+            "assets/App.js",
             "assets/bootstrap.js",
             "assets/controllers.json",
             "assets/controllers/hello_controller.js",
@@ -359,6 +409,18 @@
         },
         "files": [
             "config/packages/workflow.yaml"
+        ]
+    },
+    "symfonycasts/reset-password-bundle": {
+        "version": "1.17",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "1.0",
+            "ref": "97c1627c0384534997ae1047b93be517ca16de43"
+        },
+        "files": [
+            "config/packages/reset_password.yaml"
         ]
     },
     "twig/extra-bundle": {
