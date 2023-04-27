@@ -39,7 +39,7 @@ class AppTestFixtures extends Fixture implements FixtureGroupInterface
         $comment2 = new Comment(author: 'Lucas', text: 'I think this one is going to be moderated.', email: 'lucas@example.com', conference: $amsterdam);
         $manager->persist($comment2);
 
-        $comment3 = new Comment(author: 'Mike', text: 'Very nice.', email: 'mike@example.com', conference: $berlin, state: 'published');
+        $comment3 = new Comment(author: 'Mike', text: 'Very nice.', email: 'mike@example.com', conference: $berlin, photoFilename: 'photo.png', state: 'published');
         $manager->persist($comment3);
 
         $comment4 = new Comment(author: 'Louisa', text: 'I have seen better.', email: 'louisa@example.com', conference: $berlin, state: 'published');
@@ -59,6 +59,9 @@ class AppTestFixtures extends Fixture implements FixtureGroupInterface
 
         $user = new User(email: 'user@example.com', userFirstName: 'User', password: '$2y$13$YX8f8dQYgDoFF54KLUpaS..SZLtoN6TUqwubr.bl1A6xG9.t30xqC');
         $manager->persist($user);
+
+        $user2 = new User(email: 'mike@example.com', userFirstName: 'Mike');
+        $manager->persist($user2);
 
         $adminPassword = $this->passwordHasherFactory->getPasswordHasher(User::class)->hash('admin');
         $admin = new User(email: 'admin@admin.com', roles: ['ROLE_ADMIN'], userFirstName: 'admin', password: $adminPassword);
