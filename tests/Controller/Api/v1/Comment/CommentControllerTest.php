@@ -25,20 +25,6 @@ class CommentControllerTest extends WebTestCase
         copy(dirname(__DIR__, 5) . '/public/images/under-construction.gif', $photoDir);
     }
 
-    private function provideInvalidDataForCreateAndUpdate(): iterable
-    {
-        $data = [
-            'not_text' => 'Nice conference',
-        ];
-        yield 'invalid_data' => [$data, 'Sent data is invalid.'];
-
-        $data = [
-            'text' => 'Nice conference',
-            'photo' => 'some.png'
-        ];
-        yield 'invalid_photo' => [$data, 'Photo filename is invalid.'];
-    }
-
     private function getAuthorizationHeaderForUser(ContainerInterface $container, string $userEmail): array
     {
         $user = $container->get(UserRepository::class)->findOneBy(['email' => $userEmail]);
@@ -56,11 +42,14 @@ class CommentControllerTest extends WebTestCase
 
         // Send request with valid token and valid data.
         $data = [
-            'text' => 'Awesome conference',
-            'photo' => 'test_image.gif',
+            'conference_id' => $conference->getId(),
+            'form_data' => [
+                'text' => 'Awesome conference',
+                'photo' => 'test_image.gif',
+            ],
         ];
         $header = $this->getAuthorizationHeaderForUser($container, 'mike@example.com');
-        $client->jsonRequest('POST', '/api/conference/' . $conference->getId() . '/comment', $data, $header);
+        $client->jsonRequest('POST', '/api/v1/comment', $data, $header);
         $response = $client->getResponse();
 
         $this->assertTrue($response->isSuccessful());
@@ -73,19 +62,52 @@ class CommentControllerTest extends WebTestCase
         $this->assertEmailCount(1);
     }
 
+    private function provideInvalidDataForCreate(): iterable
+    {
+        $data = [
+            'form_data' => [
+                'text' => 'Awesome conference',
+                'photo' => 'test_image.gif',
+            ],
+        ];
+        yield 'no_conference_id' => [$data, 'Sent data is invalid.'];
+
+        $data = [
+            'conference_id' => 'id',
+        ];
+        yield 'no_form_data' => [$data, 'Sent data is invalid.'];
+
+        $data = [
+            'conference_id' => 'id',
+            'form_data' => [
+                'text' => 'Awesome conference',
+                'photo' => 'some.png',
+            ],
+        ];
+        yield 'invalid_conference_id' => [$data, 'conference_id is invalid.'];
+
+        $container = static::getContainer();
+        $conferenceRepository = $container->get(ConferenceRepository::class);
+        $conference = $conferenceRepository->findOneBy(['slug' => 'berlin-2021']);
+        $data = [
+            'conference_id' => $conference->getId(),
+            'form_data' => [
+                'not_text' => 'Awesome conference',
+            ],
+        ];
+        yield 'invalid_form_data' => [$data, 'Sent data is invalid.'];
+    }
+
     /**
-     * @dataProvider provideInvalidDataForCreateAndUpdate
+     * @dataProvider provideInvalidDataForCreate
      */
     public function testCreateWithInvalidData(array $data, string $errorMessage): void
     {
         $client = static::createClient();
 
         $container = static::getContainer();
-        $conferenceRepository = $container->get(ConferenceRepository::class);
-        $conference = $conferenceRepository->findOneBy(['slug' => 'berlin-2021']);
-
         $header = $this->getAuthorizationHeaderForUser($container, 'mike@example.com');
-        $client->jsonRequest('POST', '/api/conference/' . $conference->getId() . '/comment', $data, $header);
+        $client->jsonRequest('POST', '/api/v1/comment', $data, $header);
         $response = $client->getResponse();
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
@@ -102,7 +124,7 @@ class CommentControllerTest extends WebTestCase
 
         // Send request with invalid token.
         $header = ['HTTP_AUTHORIZATION' => 'Bearer token'];
-        $client->jsonRequest(method: 'POST', uri: '/api/conference/' . $conference->getId() . '/comment', server: $header);
+        $client->jsonRequest(method: 'POST', uri: '/api/v1/comment', server: $header);
         $response = $client->getResponse();
 
         $this->assertSame(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
@@ -110,7 +132,7 @@ class CommentControllerTest extends WebTestCase
         $this->assertSame('Invalid JWT Token', $body['message']);
     }
 
-    public function testGetOne(): void
+    public function testView(): void
     {
         $client = static::createClient();
 
@@ -119,7 +141,7 @@ class CommentControllerTest extends WebTestCase
         $commentRepository = $container->get(CommentRepository::class);
         $comment = $commentRepository->findOneBy(['email' => 'mike@example.com']);
 
-        $client->jsonRequest('GET', '/api/comment/' . $comment->getId());
+        $client->jsonRequest('GET', '/api/v1/comment/' . $comment->getId());
         $response = $client->getResponse();
 
         $commentData = [
@@ -135,7 +157,7 @@ class CommentControllerTest extends WebTestCase
         $this->assertSame(json_encode($commentData), $response->getContent());
     }
 
-    public function testGetOneUnpublished(): void
+    public function testViewGetOneUnpublished(): void
     {
         $client = static::createClient();
 
@@ -144,7 +166,7 @@ class CommentControllerTest extends WebTestCase
         $commentRepository = $container->get(CommentRepository::class);
         $comment = $commentRepository->findOneBy(['email' => 'spam@example.com']);
 
-        $client->jsonRequest('GET', '/api/comment/' . $comment->getId());
+        $client->jsonRequest('GET', '/api/v1/comment/' . $comment->getId());
         $response = $client->getResponse();
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
@@ -161,7 +183,7 @@ class CommentControllerTest extends WebTestCase
     /**
      * @dataProvider provideConferenceComments
      */
-    public function testGetAll(string $conferenceSlug, int $expectedCommentCount): void
+    public function testList(string $conferenceSlug, int $expectedCommentCount): void
     {
         $client = static::createClient();
 
@@ -169,11 +191,32 @@ class CommentControllerTest extends WebTestCase
         $conferenceRepository = $container->get(ConferenceRepository::class);
         $conference = $conferenceRepository->findOneBy(['slug' => $conferenceSlug]);
 
-        $client->jsonRequest('GET', '/api/conference/' . $conference->getId() . '/comments');
+        $client->jsonRequest('GET', '/api/v1/comments?conference_id=' . $conference->getId());
         $response = $client->getResponse();
 
         $this->assertTrue($response->isSuccessful());
         $this->assertCount($expectedCommentCount, json_decode($response->getContent(), true));
+    }
+
+    private function provideInvalidParametersForList(): iterable
+    {
+        yield 'without_parameter' => ['', 'conference_id parameter is missing.'];
+
+        yield 'invalid_parameter' => ['?conference_id=id', 'conference_id parameter is invalid.'];
+    }
+
+    /**
+     * @dataProvider provideInvalidParametersForList
+     */
+    public function testListWithInvalidParameters(string $parameter, string $errorMessage): void
+    {
+        $client = static::createClient();
+
+        $client->jsonRequest('GET', '/api/v1/comments' . $parameter);
+        $response = $client->getResponse();
+
+        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        $this->assertSame(json_encode($errorMessage), $response->getContent());
     }
 
     public function testUpdate(): void
@@ -190,7 +233,7 @@ class CommentControllerTest extends WebTestCase
             'photo' => 'test_image.gif',
         ];
         $header = $this->getAuthorizationHeaderForUser($container, 'mike@example.com');
-        $client->jsonRequest('PUT', '/api/comment/' . $comment->getId(), $data, $header);
+        $client->jsonRequest('PUT', '/api/v1/comment/' . $comment->getId(), $data, $header);
         $response = $client->getResponse();
         $updatedComment = $commentRepository->find($comment->getId());
 
@@ -209,15 +252,29 @@ class CommentControllerTest extends WebTestCase
         $comment = $commentRepository->findOneBy(['email' => 'mike@example.com']);
 
         $header = $this->getAuthorizationHeaderForUser($container, 'user@example.com');
-        $client->jsonRequest(method: 'PUT', uri: '/api/comment/' . $comment->getId(), server: $header);
+        $client->jsonRequest(method: 'PUT', uri: '/api/v1/comment/' . $comment->getId(), server: $header);
         $response = $client->getResponse();
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
         $this->assertSame(json_encode('User user@example.com cannot modify this comment.'), $response->getContent());
     }
 
+    private function provideInvalidDataForUpdate(): iterable
+    {
+        $data = [
+            'not_text' => 'Nice conference',
+        ];
+        yield 'invalid_data' => [$data, 'Sent data is invalid.'];
+
+        $data = [
+            'text' => 'Nice conference',
+            'photo' => 'some.png'
+        ];
+        yield 'invalid_photo' => [$data, 'Photo filename is invalid.'];
+    }
+
     /**
-     * @dataProvider provideInvalidDataForCreateAndUpdate
+     * @dataProvider provideInvalidDataForUpdate
      */
     public function testUpdateWithInvalidData(array $data, string $errorMessage): void
     {
@@ -228,7 +285,7 @@ class CommentControllerTest extends WebTestCase
         $comment = $commentRepository->findOneBy(['email' => 'mike@example.com']);
 
         $header = $this->getAuthorizationHeaderForUser($container, 'mike@example.com');
-        $client->jsonRequest('PUT', '/api/comment/' . $comment->getId(), $data, $header);
+        $client->jsonRequest('PUT', '/api/v1/comment/' . $comment->getId(), $data, $header);
         $response = $client->getResponse();
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
@@ -245,7 +302,7 @@ class CommentControllerTest extends WebTestCase
 
         // Send request with valid token.
         $header = $this->getAuthorizationHeaderForUser($container, 'mike@example.com');
-        $client->jsonRequest(method: 'DELETE', uri: '/api/comment/' . $comment->getId(), server: $header);
+        $client->jsonRequest(method: 'DELETE', uri: '/api/v1/comment/' . $comment->getId(), server: $header);
         $response = $client->getResponse();
 
         $this->assertTrue($response->isSuccessful());
@@ -263,7 +320,7 @@ class CommentControllerTest extends WebTestCase
 
         // Send request with valid token.
         $header = $this->getAuthorizationHeaderForUser($container, 'user@example.com');
-        $client->jsonRequest(method: 'DELETE', uri: '/api/comment/' . $comment->getId(), server: $header);
+        $client->jsonRequest(method: 'DELETE', uri: '/api/v1/comment/' . $comment->getId(), server: $header);
         $response = $client->getResponse();
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
