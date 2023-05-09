@@ -65,6 +65,11 @@ class CommentRepository extends ServiceEntityRepository
         return new Paginator($query);
     }
 
+    public function getPublishedCommentsByConference(Conference $conference): array
+    {
+        return $this->findBy(['conference' => $conference->getId(), 'state' => 'published']);
+    }
+
     public function save(Comment $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);

@@ -57,6 +57,18 @@ class CommentRepositoryTest extends KernelTestCase
         $this->assertCount(1, $paginator->getQuery()->getResult());
     }
 
+    public function testGetPublishedCommentsByConference(): void
+    {
+        $conference = $this->entityManager
+            ->getRepository(Conference::class)
+            ->findOneBy(['slug' => 'berlin-2021']);
+
+        $comments = $this->commentRepository
+            ->getPublishedCommentsByConference($conference);
+
+        $this->assertCount(3, $comments);
+    }
+
     protected function tearDown(): void
     {
         parent::tearDown();

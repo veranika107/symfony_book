@@ -21,7 +21,6 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class ConferenceController extends AbstractController
 {
-
     public function __construct(
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $bus,
