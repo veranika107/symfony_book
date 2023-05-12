@@ -54,7 +54,7 @@ class CommentControllerTest extends WebTestCase
 
         $this->assertTrue($response->isSuccessful());
         $body = json_decode($response->getContent(), true);
-        $this->assertSame('The comment is created and will be moderated.', $body['data']['message']);
+        $this->assertSame('The comment is created and will be moderated.', $body['message']);
 
         // Check if notifications are sent.
         $this->assertNotificationCount(1);
@@ -270,7 +270,7 @@ class CommentControllerTest extends WebTestCase
 
         $this->assertTrue($response->isSuccessful());
         $body = json_decode($response->getContent(), true);
-        $this->assertSame('The comment is updated.', $body['data']['message']);
+        $this->assertSame('The comment is updated.', $body['message']);
         $this->assertSame('Nice conference', $updatedComment->getText());
         $this->assertSame('test_image.gif', $updatedComment->getPhotoFilename());
     }
@@ -353,7 +353,7 @@ class CommentControllerTest extends WebTestCase
 
         $this->assertTrue($response->isSuccessful());
         $body = json_decode($response->getContent(), true);
-        $this->assertSame('The comment is deleted.', $body['data']['message']);
+        $this->assertSame('The comment is deleted.', $body['message']);
         $this->assertNull($commentRepository->find($comment->getId()));
     }
 

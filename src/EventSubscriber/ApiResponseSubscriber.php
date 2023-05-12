@@ -2,15 +2,17 @@
 
 namespace App\EventSubscriber;
 
-use App\Response\ApiJsonResponse;
-use App\Serializer\ApiExceptionNormalizer;
+use App\Service\Api\ApiJsonResponseManager;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 class ApiResponseSubscriber implements EventSubscriberInterface
 {
+    public function __construct(private ApiJsonResponseManager $apiJsonResponseManager)
+    {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -26,11 +28,6 @@ class ApiResponseSubscriber implements EventSubscriberInterface
         }
 
         $exception = $event->getThrowable();
-        $normalizer = new ApiExceptionNormalizer();
-        $errors = $normalizer->normalize($exception);
-
-        $status = method_exists($exception,'getStatusCode') ? $exception->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR;
-        $response = new ApiJsonResponse(errors: $errors, status: $status);
-        $event->setResponse($response);
+        $event->setResponse($this->apiJsonResponseManager->createApiJsonResponse(error: $exception));
     }
 }

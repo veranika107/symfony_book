@@ -2,7 +2,7 @@
 
 namespace App\Security;
 
-use App\Service\Google\GoogleUserManager;
+use App\Service\Api\Google\GoogleUserManager;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Client\Provider\GoogleClient;
 use KnpU\OAuth2ClientBundle\Security\Authenticator\OAuth2Authenticator;

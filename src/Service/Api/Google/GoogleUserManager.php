@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Service\Google;
+namespace App\Service\Api\Google;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
 use League\OAuth2\Client\Provider\GoogleUser;
-use UnexpectedValueException;
 
 class GoogleUserManager
 {

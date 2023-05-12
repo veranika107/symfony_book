@@ -4,23 +4,28 @@ namespace App\Tests\EventSubscriber;
 
 use App\EventSubscriber\ApiResponseSubscriber;
 use App\Exception\ApiHttpException;
-use App\Response\ApiJsonResponse;
-use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
-class ApiResponseSubscriberTest extends TestCase
+class ApiResponseSubscriberTest extends KernelTestCase
 {
     private EventDispatcher $dispatcher;
 
+    private ApiResponseSubscriber $apiResponseSubscriber;
+
     protected function setUp(): void
     {
+        self::bootKernel();
+        $container = static::getContainer();
+        $this->apiResponseSubscriber = $container->get(ApiResponseSubscriber::class);
+
         $this->dispatcher = new EventDispatcher();
     }
-
 
     private function provideExceptions(): iterable
     {
@@ -36,14 +41,13 @@ class ApiResponseSubscriberTest extends TestCase
      */
     public function testFormatApiException(\Exception $exception, int $status) : void
     {
-        $listener = new ApiResponseSubscriber();
-        $this->dispatcher->addListener('onKernelException', [$listener, 'onKernelException']);
+        $this->dispatcher->addListener('onKernelException', [$this->apiResponseSubscriber, 'onKernelException']);
         $kernel = $this->createMock(HttpKernelInterface::class);
         $event = new ExceptionEvent($kernel, new Request(attributes: ['_format' => 'json']), HttpKernelInterface::MAIN_REQUEST, $exception);
         $this->dispatcher->dispatch($event, 'onKernelException');
 
         $response = $event->getResponse();
-        $this->assertInstanceOf(ApiJsonResponse::class, $response);
+        $this->assertInstanceOf(JsonResponse::class, $response);
 
         $data = $response->getContent();
         $this->assertSame(json_encode($this->createErrorArray($status)), $data);
@@ -51,8 +55,7 @@ class ApiResponseSubscriberTest extends TestCase
 
     public function testFormatApiExceptionWithInvalidFormat() : void
     {
-        $listener = new ApiResponseSubscriber();
-        $this->dispatcher->addListener('onKernelException', [$listener, 'onKernelException']);
+        $this->dispatcher->addListener('onKernelException', [$this->apiResponseSubscriber, 'onKernelException']);
         $kernel = $this->createMock(HttpKernelInterface::class);
         $event = new ExceptionEvent($kernel, new Request(attributes: ['_format' => 'html']), HttpKernelInterface::MAIN_REQUEST, new \Exception());
         $this->dispatcher->dispatch($event, 'onKernelException');

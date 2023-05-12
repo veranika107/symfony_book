@@ -9,7 +9,7 @@ use App\Form\CommentFormType;
 use App\Message\CommentMessage;
 use App\Repository\CommentRepository;
 use App\Repository\ConferenceRepository;
-use App\Response\ApiJsonResponse;
+use App\Service\Api\ApiJsonResponseManager;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,6 +26,7 @@ class CommentController extends AbstractController
 {
     public function __construct(
         private MessageBusInterface $bus,
+        private ApiJsonResponseManager $apiJsonResponseManager,
     ) {
     }
 
@@ -85,7 +86,7 @@ class CommentController extends AbstractController
         $reviewUrl = $this->generateUrl('review_comment', ['id' => $comment->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
         $this->bus->dispatch(new CommentMessage($comment->getId(), $reviewUrl, $context));
 
-        return new ApiJsonResponse(data: ['message' => 'The comment is created and will be moderated.'], status: Response::HTTP_CREATED);
+        return$this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is created and will be moderated.');
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_get_comment', methods: ['GET'], format: 'json')]
@@ -95,9 +96,7 @@ class CommentController extends AbstractController
             throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
-        $data = $this->serializeComment($comment, $request);
-
-        return new ApiJsonResponse(data: $data);
+        return $this->apiJsonResponseManager->createApiJsonResponse(data: $this->serializeComment($comment, $request));
     }
 
     #[Route('/api/v1/comments', name: 'api_get_all_comments', methods: ['GET'], format: 'json')]
@@ -123,7 +122,7 @@ class CommentController extends AbstractController
             $data[] = $this->serializeComment($comment, $request);
         }
 
-        return new ApiJsonResponse(data: $data);
+        return $this->apiJsonResponseManager->createApiJsonResponse(data: $data);
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_update_comment', methods: ['PUT'], format: 'json')]
@@ -165,7 +164,7 @@ class CommentController extends AbstractController
         }
         $commentRepository->save($comment, true);
 
-        return new ApiJsonResponse(data: ['message' => 'The comment is updated.']);
+        return $this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is updated.');
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_delete_comment', methods: ['DELETE'], format: 'json')]
@@ -182,7 +181,7 @@ class CommentController extends AbstractController
         }
         $commentRepository->remove($comment, true);
 
-        return new ApiJsonResponse(data: ['message' => 'The comment is deleted.']);
+        return $this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is deleted.');
     }
 
     private function serializeComment(Comment $comment, Request $request)
