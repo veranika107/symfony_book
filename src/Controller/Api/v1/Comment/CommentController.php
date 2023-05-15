@@ -3,13 +3,15 @@
 namespace App\Controller\Api\v1\Comment;
 
 use App\Entity\Comment;
-use App\Entity\Conference;
 use App\Entity\User;
+use App\Exception\ApiHttpException;
 use App\Form\CommentFormType;
 use App\Message\CommentMessage;
 use App\Repository\CommentRepository;
 use App\Repository\ConferenceRepository;
+use App\Service\Api\ApiJsonResponseManager;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +26,7 @@ class CommentController extends AbstractController
 {
     public function __construct(
         private MessageBusInterface $bus,
+        private ApiJsonResponseManager $apiJsonResponseManager,
     ) {
     }
 
@@ -40,20 +43,25 @@ class CommentController extends AbstractController
 
         if (!array_key_exists('conference_id', $data) || !array_key_exists('form_data', $data))
         {
-            return $this->json('Sent data is invalid.', Response::HTTP_BAD_REQUEST);
+            throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
         $conferenceId = $data['conference_id'];
         if (!UuidV7::isValid($conferenceId) || !($conference = $conferenceRepository->find($conferenceId))) {
-            return $this->json('conference_id is invalid.', Response::HTTP_BAD_REQUEST);
+            throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
         $formData = $data['form_data'];
-        $form = $this->createForm(type: CommentFormType::class);
+        $form = $this->createForm(type: CommentFormType::class, options: ['csrf_protection' => false]);
         try {
             $form->submit($formData);
-        } catch (\Throwable $exception) {
-            return $this->json('Sent data is invalid.', Response::HTTP_BAD_REQUEST);
+        } catch (\TypeError $exception) {
+            throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!$form->isValid()) {
+            $errors = $this->getErrorsFromForm($form);
+            throw new ApiHttpException(statusCode: Response::HTTP_BAD_REQUEST, violations: $errors);
         }
 
         /** @var Comment $comment */
@@ -62,7 +70,7 @@ class CommentController extends AbstractController
         // Check if photo name is sent and if such photo exists on server.
         if (array_key_exists('photo', $formData)) {
             if (!file_exists($photoDir . '/' . $formData['photo'])) {
-                return $this->json('Photo filename is invalid.', Response::HTTP_BAD_REQUEST);
+                throw new ApiHttpException(statusCode: Response::HTTP_BAD_REQUEST, violations: ['photo' => ['Photo filename is invalid.']]);
             }
             $comment->setPhotoFilename($formData['photo']);
         }
@@ -78,19 +86,17 @@ class CommentController extends AbstractController
         $reviewUrl = $this->generateUrl('review_comment', ['id' => $comment->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
         $this->bus->dispatch(new CommentMessage($comment->getId(), $reviewUrl, $context));
 
-        return $this->json('The comment is created and will be moderated.', Response::HTTP_CREATED);
+        return$this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is created and will be moderated.');
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_get_comment', methods: ['GET'], format: 'json')]
     public function view(Comment $comment, Request $request): JsonResponse
     {
         if ($comment->getState() !== 'published') {
-            return $this->json('The comment is not published.', Response::HTTP_BAD_REQUEST);
+            throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
-        $data = $this->serializeComment($comment, $request);
-
-        return $this->json($data);
+        return $this->apiJsonResponseManager->createApiJsonResponse(data: $this->serializeComment($comment, $request));
     }
 
     #[Route('/api/v1/comments', name: 'api_get_all_comments', methods: ['GET'], format: 'json')]
@@ -101,13 +107,12 @@ class CommentController extends AbstractController
     ): JsonResponse
     {
         $conferenceId = $request->query->get('conference_id');
-        if (!$conferenceId)
-        {
-            return $this->json('conference_id parameter is missing.', Response::HTTP_BAD_REQUEST);
+        if (!$conferenceId) {
+            throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
         if (!UuidV7::isValid($conferenceId) || !($conference = $conferenceRepository->find($conferenceId))) {
-            return $this->json('conference_id parameter is invalid.', Response::HTTP_BAD_REQUEST);
+            throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
         $data = [];
@@ -117,7 +122,7 @@ class CommentController extends AbstractController
             $data[] = $this->serializeComment($comment, $request);
         }
 
-        return $this->json($data);
+        return $this->apiJsonResponseManager->createApiJsonResponse(data: $data);
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_update_comment', methods: ['PUT'], format: 'json')]
@@ -132,29 +137,34 @@ class CommentController extends AbstractController
         /** @var User $currentUser */
         $currentUser = $this->getUser();
         if ($comment->getEmail() !== $currentUser->getEmail()) {
-            return $this->json(sprintf('User %s cannot modify this comment.', $currentUser->getEmail()), Response::HTTP_BAD_REQUEST);
+            throw new ApiHttpException(Response::HTTP_FORBIDDEN);
         }
 
         $data = json_decode($request->getContent(), true);
-        $form = $this->createForm(type: CommentFormType::class, data: $comment);
+        $form = $this->createForm(type: CommentFormType::class, data: $comment, options: ['csrf_protection' => false]);
 
         try {
             $form->submit($data);
         } catch (\Throwable $exception) {
-            return $this->json('Sent data is invalid.', Response::HTTP_BAD_REQUEST);
+            throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!$form->isValid()) {
+            $errors = $this->getErrorsFromForm($form);
+            throw new ApiHttpException(statusCode: Response::HTTP_BAD_REQUEST, violations: $errors);
         }
 
         /** @var Comment $comment */
         $comment = $form->getData();
         if (array_key_exists('photo', $data)) {
             if (!file_exists($photoDir . '/' . $data['photo'])) {
-                return $this->json('Photo filename is invalid.', Response::HTTP_BAD_REQUEST);
+                throw new ApiHttpException(statusCode: Response::HTTP_BAD_REQUEST, violations: ['photo' => ['Photo filename is invalid.']]);
             }
             $comment->setPhotoFilename($data['photo']);
         }
         $commentRepository->save($comment, true);
 
-        return $this->json('The comment is updated.');
+        return $this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is updated.');
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_delete_comment', methods: ['DELETE'], format: 'json')]
@@ -167,11 +177,11 @@ class CommentController extends AbstractController
         /** @var User $currentUser */
         $currentUser = $this->getUser();
         if ($comment->getEmail() !== $currentUser->getEmail()) {
-            return $this->json(sprintf('User %s cannot delete this comment.', $currentUser->getEmail()), Response::HTTP_BAD_REQUEST);
+            throw new ApiHttpException(Response::HTTP_FORBIDDEN);
         }
         $commentRepository->remove($comment, true);
 
-        return $this->json('The comment is deleted.');
+        return $this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is deleted.');
     }
 
     private function serializeComment(Comment $comment, Request $request)
@@ -184,5 +194,24 @@ class CommentController extends AbstractController
             'text' => $comment->getText(),
             'photo' => $comment->getPhotoFilename() ? $request->getUriForPath('/uploads/photos/' . $comment->getPhotoFilename()) : null,
         );
+    }
+
+    private function getErrorsFromForm(FormInterface $form)
+    {
+        $errors = array();
+
+        foreach ($form->getErrors() as $error) {
+            $errors[] = $error->getMessage();
+        }
+
+        foreach ($form->all() as $childForm) {
+            if ($childForm instanceof FormInterface) {
+                if ($childErrors = $this->getErrorsFromForm($childForm)) {
+                    $errors[$childForm->getName()] = $childErrors;
+                }
+            }
+        }
+
+        return $errors;
     }
 }

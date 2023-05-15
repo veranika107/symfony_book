@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Tests\Service\Google;
+namespace App\Tests\Service\Api\Google;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
-use App\Service\Google\GoogleUserManager;
+use App\Service\Api\Google\GoogleUserManager;
 use League\OAuth2\Client\Provider\GoogleUser;
 use PHPUnit\Framework\TestCase;
 

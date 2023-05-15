@@ -4,7 +4,7 @@ namespace App\Tests\Security;
 
 use App\Entity\User;
 use App\Security\GoogleAuthenticator;
-use App\Service\Google\GoogleUserManager;
+use App\Service\Api\Google\GoogleUserManager;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Client\Provider\GoogleClient;
 use League\OAuth2\Client\Provider\GoogleUser;

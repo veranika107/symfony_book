@@ -53,7 +53,8 @@ class CommentControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $this->assertTrue($response->isSuccessful());
-        $this->assertSame(json_encode('The comment is created and will be moderated.'), $response->getContent());
+        $body = json_decode($response->getContent(), true);
+        $this->assertSame('The comment is created and will be moderated.', $body['message']);
 
         // Check if notifications are sent.
         $this->assertNotificationCount(1);
@@ -70,12 +71,12 @@ class CommentControllerTest extends WebTestCase
                 'photo' => 'test_image.gif',
             ],
         ];
-        yield 'no_conference_id' => [$data, 'Sent data is invalid.'];
+        yield 'no_conference_id' => [$data];
 
         $data = [
             'conference_id' => 'id',
         ];
-        yield 'no_form_data' => [$data, 'Sent data is invalid.'];
+        yield 'no_form_data' => [$data];
 
         $data = [
             'conference_id' => 'id',
@@ -84,24 +85,39 @@ class CommentControllerTest extends WebTestCase
                 'photo' => 'some.png',
             ],
         ];
-        yield 'invalid_conference_id' => [$data, 'conference_id is invalid.'];
+        yield 'invalid_conference_id' => [$data];
 
         $container = static::getContainer();
         $conferenceRepository = $container->get(ConferenceRepository::class);
         $conference = $conferenceRepository->findOneBy(['slug' => 'berlin-2021']);
+
         $data = [
             'conference_id' => $conference->getId(),
             'form_data' => [
                 'not_text' => 'Awesome conference',
             ],
         ];
-        yield 'invalid_form_data' => [$data, 'Sent data is invalid.'];
+        yield 'invalid_form_data' => [$data];
+
+        $data = [
+            'conference_id' => $conference->getId(),
+            'form_data' => [
+                'text' => 'Nice conference',
+                'photo' => 'some.png'
+            ]
+        ];
+        $violations = [
+            'photo' => [
+                'Photo filename is invalid.'
+            ]
+        ];
+        yield 'invalid_photo' => [$data, $violations];
     }
 
     /**
      * @dataProvider provideInvalidDataForCreate
      */
-    public function testCreateWithInvalidData(array $data, string $errorMessage): void
+    public function testCreateWithInvalidData(array $data, array $violations = []): void
     {
         $client = static::createClient();
 
@@ -110,8 +126,15 @@ class CommentControllerTest extends WebTestCase
         $client->jsonRequest('POST', '/api/v1/comment', $data, $header);
         $response = $client->getResponse();
 
-        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $this->assertSame(json_encode($errorMessage), $response->getContent());
+        $body = json_decode($response->getContent(), true);
+        $errorStatus = Response::HTTP_BAD_REQUEST;
+        $errorTitle = Response::$statusTexts[$errorStatus];
+        $this->assertSame($errorStatus, $response->getStatusCode());
+        $this->assertSame($errorTitle, $body['error']['title']);
+
+        if ($violations) {
+            $this->assertSame($violations, $body['error']['violations']);
+        }
     }
 
     public function testCreateUnauthorized(): void
@@ -145,12 +168,14 @@ class CommentControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $commentData = [
-            'id' => $comment->getId(),
-            'conference_id' => $comment->getConference()->getId(),
-            'author' => $comment->getAuthor(),
-            'email' => $comment->getEmail(),
-            'text' => $comment->getText(),
-            'photo' => 'http://localhost/uploads/photos/photo.png'
+            'data' => [
+                'id' => $comment->getId(),
+                'conference_id' => $comment->getConference()->getId(),
+                'author' => $comment->getAuthor(),
+                'email' => $comment->getEmail(),
+                'text' => $comment->getText(),
+                'photo' => 'http://localhost/uploads/photos/photo.png'
+            ]
         ];
 
         $this->assertTrue($response->isSuccessful());
@@ -169,8 +194,11 @@ class CommentControllerTest extends WebTestCase
         $client->jsonRequest('GET', '/api/v1/comment/' . $comment->getId());
         $response = $client->getResponse();
 
-        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $this->assertSame(json_encode('The comment is not published.'), $response->getContent());
+        $body = json_decode($response->getContent(), true);
+        $errorStatus = Response::HTTP_BAD_REQUEST;
+        $errorTitle = Response::$statusTexts[$errorStatus];
+        $this->assertSame($errorStatus, $response->getStatusCode());
+        $this->assertSame($errorTitle, $body['error']['title']);
     }
 
     private function provideConferenceComments(): iterable
@@ -195,28 +223,31 @@ class CommentControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $this->assertTrue($response->isSuccessful());
-        $this->assertCount($expectedCommentCount, json_decode($response->getContent(), true));
+        $this->assertCount($expectedCommentCount, json_decode($response->getContent(), true)['data']);
     }
 
     private function provideInvalidParametersForList(): iterable
     {
-        yield 'without_parameter' => ['', 'conference_id parameter is missing.'];
+        yield 'without_parameter' => [''];
 
-        yield 'invalid_parameter' => ['?conference_id=id', 'conference_id parameter is invalid.'];
+        yield 'invalid_parameter' => ['?conference_id=id'];
     }
 
     /**
      * @dataProvider provideInvalidParametersForList
      */
-    public function testListWithInvalidParameters(string $parameter, string $errorMessage): void
+    public function testListWithInvalidParameters(string $parameter): void
     {
         $client = static::createClient();
 
         $client->jsonRequest('GET', '/api/v1/comments' . $parameter);
         $response = $client->getResponse();
 
-        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $this->assertSame(json_encode($errorMessage), $response->getContent());
+        $body = json_decode($response->getContent(), true);
+        $errorStatus = Response::HTTP_BAD_REQUEST;
+        $errorTitle = Response::$statusTexts[$errorStatus];
+        $this->assertSame($errorStatus, $response->getStatusCode());
+        $this->assertSame($errorTitle, $body['error']['title']);
     }
 
     public function testUpdate(): void
@@ -238,7 +269,8 @@ class CommentControllerTest extends WebTestCase
         $updatedComment = $commentRepository->find($comment->getId());
 
         $this->assertTrue($response->isSuccessful());
-        $this->assertSame(json_encode('The comment is updated.'), $response->getContent());
+        $body = json_decode($response->getContent(), true);
+        $this->assertSame('The comment is updated.', $body['message']);
         $this->assertSame('Nice conference', $updatedComment->getText());
         $this->assertSame('test_image.gif', $updatedComment->getPhotoFilename());
     }
@@ -255,8 +287,11 @@ class CommentControllerTest extends WebTestCase
         $client->jsonRequest(method: 'PUT', uri: '/api/v1/comment/' . $comment->getId(), server: $header);
         $response = $client->getResponse();
 
-        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $this->assertSame(json_encode('User user@example.com cannot modify this comment.'), $response->getContent());
+        $body = json_decode($response->getContent(), true);
+        $errorStatus = Response::HTTP_FORBIDDEN;
+        $errorTitle = Response::$statusTexts[$errorStatus];
+        $this->assertSame($errorStatus, $response->getStatusCode());
+        $this->assertSame($errorTitle, $body['error']['title']);
     }
 
     private function provideInvalidDataForUpdate(): iterable
@@ -264,19 +299,24 @@ class CommentControllerTest extends WebTestCase
         $data = [
             'not_text' => 'Nice conference',
         ];
-        yield 'invalid_data' => [$data, 'Sent data is invalid.'];
+        yield 'invalid_data' => [$data];
 
         $data = [
             'text' => 'Nice conference',
             'photo' => 'some.png'
         ];
-        yield 'invalid_photo' => [$data, 'Photo filename is invalid.'];
+        $violations = [
+            'photo' => [
+                'Photo filename is invalid.'
+            ]
+        ];
+        yield 'invalid_photo' => [$data, $violations];
     }
 
     /**
      * @dataProvider provideInvalidDataForUpdate
      */
-    public function testUpdateWithInvalidData(array $data, string $errorMessage): void
+    public function testUpdateWithInvalidData(array $data, array $violations = []): void
     {
         $client = static::createClient();
 
@@ -288,8 +328,14 @@ class CommentControllerTest extends WebTestCase
         $client->jsonRequest('PUT', '/api/v1/comment/' . $comment->getId(), $data, $header);
         $response = $client->getResponse();
 
-        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $this->assertSame(json_encode($errorMessage), $response->getContent());
+        $body = json_decode($response->getContent(), true);
+        $errorStatus = Response::HTTP_BAD_REQUEST;
+        $errorTitle = Response::$statusTexts[$errorStatus];
+        $this->assertSame($errorStatus, $response->getStatusCode());
+        $this->assertSame($errorTitle, $body['error']['title']);
+        if ($violations) {
+            $this->assertSame($violations, $body['error']['violations']);
+        }
     }
 
     public function testDelete(): void
@@ -306,11 +352,12 @@ class CommentControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $this->assertTrue($response->isSuccessful());
-        $this->assertSame(json_encode('The comment is deleted.'), $response->getContent());
+        $body = json_decode($response->getContent(), true);
+        $this->assertSame('The comment is deleted.', $body['message']);
         $this->assertNull($commentRepository->find($comment->getId()));
     }
 
-    public function testDeleteWithInvalidEmail(): void
+    public function testDeleteWithInvalidUser(): void
     {
         $client = static::createClient();
 
@@ -323,8 +370,11 @@ class CommentControllerTest extends WebTestCase
         $client->jsonRequest(method: 'DELETE', uri: '/api/v1/comment/' . $comment->getId(), server: $header);
         $response = $client->getResponse();
 
-        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $this->assertSame(json_encode('User user@example.com cannot delete this comment.'), $response->getContent());
+        $body = json_decode($response->getContent(), true);
+        $errorStatus = Response::HTTP_FORBIDDEN;
+        $errorTitle = Response::$statusTexts[$errorStatus];
+        $this->assertSame($errorStatus, $response->getStatusCode());
+        $this->assertSame($errorTitle, $body['error']['title']);
     }
 
     /**
@@ -332,6 +382,6 @@ class CommentControllerTest extends WebTestCase
      */
     public static function unlinkImage(): void
     {
-        // unlink(dirname(__DIR__, 5) . '/public/uploads/photos/test_image.gif');
+        unlink(dirname(__DIR__, 5) . '/public/uploads/photos/test_image.gif');
     }
 }
