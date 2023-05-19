@@ -9,7 +9,6 @@ use App\Repository\CommentRepository;
 use App\Service\ImageOptimizer;
 use App\Service\SpamChecker;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class CommentMessageHandlerTest extends KernelTestCase
 {

@@ -9,6 +9,7 @@ use App\Form\CommentFormType;
 use App\Message\CommentMessage;
 use App\Repository\CommentRepository;
 use App\Repository\ConferenceRepository;
+use App\Security\Voter\CommentVoter;
 use App\Service\Api\ApiJsonResponseManager;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormInterface;
@@ -126,7 +127,7 @@ class CommentController extends AbstractController
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_update_comment', methods: ['PUT'], format: 'json')]
-    #[isGranted('IS_AUTHENTICATED_FULLY')]
+    #[IsGranted(CommentVoter::EDIT, 'comment')]
     public function update(
         Comment $comment,
         Request $request,
@@ -134,12 +135,6 @@ class CommentController extends AbstractController
         #[Autowire('%photo_dir%')] string $photoDir,
     ): JsonResponse
     {
-        /** @var User $currentUser */
-        $currentUser = $this->getUser();
-        if ($comment->getEmail() !== $currentUser->getEmail()) {
-            throw new ApiHttpException(Response::HTTP_FORBIDDEN);
-        }
-
         $data = json_decode($request->getContent(), true);
         $form = $this->createForm(type: CommentFormType::class, data: $comment, options: ['csrf_protection' => false]);
 
@@ -193,6 +188,7 @@ class CommentController extends AbstractController
             'email' => $comment->getEmail(),
             'text' => $comment->getText(),
             'photo' => $comment->getPhotoFilename() ? $request->getUriForPath('/uploads/photos/' . $comment->getPhotoFilename()) : null,
+            'edited' => (bool)$comment->getUpdatedAt(),
         );
     }
 

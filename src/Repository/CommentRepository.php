@@ -8,6 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Uid\UuidV7;
 
 /**
  * @extends ServiceEntityRepository<Comment>
@@ -68,6 +69,11 @@ class CommentRepository extends ServiceEntityRepository
     public function getPublishedCommentsByConference(Conference $conference): array
     {
         return $this->findBy(['conference' => $conference->getId(), 'state' => 'published']);
+    }
+
+    public function findPublishedCommentById(UuidV7|string $id): Comment|null
+    {
+        return $this->findOneBy(['id' => $id, 'state' => 'published']);
     }
 
     public function save(Comment $entity, bool $flush = false): void

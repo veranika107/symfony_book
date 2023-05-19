@@ -69,6 +69,30 @@ class CommentRepositoryTest extends KernelTestCase
         $this->assertCount(3, $comments);
     }
 
+    public function testFindPublishedCommentById(): void
+    {
+        $expectedComment = $this->entityManager
+            ->getRepository(Comment::class)
+            ->findOneBy(['email' => 'fabien@example.com']);
+
+        $comment = $this->commentRepository
+            ->findPublishedCommentById($expectedComment->getId());
+
+        $this->assertSame($expectedComment, $comment);
+    }
+
+    public function testFindPublishedCommentByIdWithUnpublishedComment(): void
+    {
+        $comment = $this->entityManager
+            ->getRepository(Comment::class)
+            ->findOneBy(['email' => 'lucas@example.com']);
+
+        $result = $this->commentRepository
+            ->findPublishedCommentById($comment->getId());
+
+        $this->assertNull($result);
+    }
+
     protected function tearDown(): void
     {
         parent::tearDown();

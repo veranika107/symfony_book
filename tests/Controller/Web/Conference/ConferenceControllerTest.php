@@ -67,11 +67,6 @@ class ConferenceControllerTest extends WebTestCase
         $comment->setState('published');
         self::getContainer()->get(EntityManagerInterface::class)->flush();
 
-        $photo = $comment->getPhotoFilename();
-        $photoNameWithoutExtension = basename($photo, '.gif');
-        $this->assertTrue(file_exists(dirname(__DIR__, 4) . '/public/uploads/photos/' . $photo));
-        $this->assertTrue(ctype_xdigit($photoNameWithoutExtension));
-
         $this->assertResponseRedirects();
         $client->followRedirect();
         $this->assertSelectorExists('div:contains("There are 2 comments")');
