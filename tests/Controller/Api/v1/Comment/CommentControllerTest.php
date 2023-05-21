@@ -155,14 +155,24 @@ class CommentControllerTest extends WebTestCase
         $this->assertSame('Invalid JWT Token', $body['message']);
     }
 
-    public function testView(): void
+    private function provideDataToTestView(): iterable
+    {
+        yield 'edited_comment' => ['mike@example.com', 'http://localhost/uploads/photos/photo.png', true];
+
+        yield 'not_edited_comment' => ['fabien@example.com', null, false];
+    }
+
+    /**
+     * @dataProvider provideDataToTestView
+     */
+    public function testView(string $email, ?string $photo, bool $edited): void
     {
         $client = static::createClient();
 
         // Get comment with 'published' status.
         $container = static::getContainer();
         $commentRepository = $container->get(CommentRepository::class);
-        $comment = $commentRepository->findOneBy(['email' => 'mike@example.com']);
+        $comment = $commentRepository->findOneBy(['email' => $email]);
 
         $client->jsonRequest('GET', '/api/v1/comment/' . $comment->getId());
         $response = $client->getResponse();
@@ -174,7 +184,8 @@ class CommentControllerTest extends WebTestCase
                 'author' => $comment->getAuthor(),
                 'email' => $comment->getEmail(),
                 'text' => $comment->getText(),
-                'photo' => 'http://localhost/uploads/photos/photo.png'
+                'photo' => $photo,
+                'edited' => $edited,
             ]
         ];
 

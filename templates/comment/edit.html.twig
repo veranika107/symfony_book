@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Conference Guestbook - Edit Comment{% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb" class="mb-5">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('homepage') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('conference', { slug: comment.conference.slug }) }}">Conference</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Comment</li>
+        </ol>
+    </nav>
+
+    {{ form_start(form) }}
+        <div class="my-custom-class-for-errors">
+            {{ form_errors(form) }}
+        </div>
+
+        <div>
+            <div>
+                {{ form_row(form.text) }}
+            </div>
+            <div class="row mb-3">
+                {% if comment.photoFilename %}
+                    <div class="col">
+                        <img src="{{ asset(photo_dir ~ comment.photoFilename) }}" alt="Comment image" />
+                    </div>
+                {% endif %}
+                <div class="col">
+                    {{ form_row(form.photo) }}
+                </div>
+            </div>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}

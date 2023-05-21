@@ -39,7 +39,7 @@ class AppTestFixtures extends Fixture implements FixtureGroupInterface
         $comment2 = new Comment(author: 'Lucas', text: 'I think this one is going to be moderated.', email: 'lucas@example.com', conference: $amsterdam);
         $manager->persist($comment2);
 
-        $comment3 = new Comment(author: 'Mike', text: 'Very nice.', email: 'mike@example.com', conference: $berlin, photoFilename: 'photo.png', state: 'published');
+        $comment3 = new Comment(author: 'Mike', text: 'Very bad.', email: 'mike@example.com', conference: $berlin, photoFilename: 'photo.png', state: 'published');
         $manager->persist($comment3);
 
         $comment4 = new Comment(author: 'Louisa', text: 'I have seen better.', email: 'louisa@example.com', conference: $berlin, state: 'published');
@@ -67,6 +67,11 @@ class AppTestFixtures extends Fixture implements FixtureGroupInterface
         $admin = new User(email: 'admin@admin.com', roles: ['ROLE_ADMIN'], userFirstName: 'admin', password: $adminPassword);
         $manager->persist($admin);
 
+        $manager->flush();
+
+        // Update comment to change 'updatedAt'.
+        $comment3->setText('Very nice');
+        $manager->persist($comment3);
         $manager->flush();
     }
 }

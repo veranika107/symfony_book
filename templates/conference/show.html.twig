@@ -20,9 +20,9 @@
                 {% for comment in comments %}
                     <div class="media shadow border rounded-3 p-3 mb-4">
                         <div class="comment-img me-3">
-                            {% if comment.photofilename %}
-                                <a href="{{ asset('uploads/photos/' ~ comment.photofilename) }}" target="_blank">
-                                    <img src="{{ asset('uploads/photos/' ~ comment.photofilename) }}" />
+                            {% if comment.photoFilename %}
+                                <a href="{{ asset(photo_dir ~ comment.photoFilename) }}" target="_blank">
+                                    <img src="{{ asset(photo_dir ~ comment.photoFilename) }}" />
                                 </a>
                             {% endif %}
                         </div>
@@ -32,16 +32,22 @@
                                 {{ comment.author }}
                             </h4>
 
-                            <div class="mb-2">
-                                <small class="text-muted text-uppercase">
+                            <div class="mb-2 row">
+                                <small class="text-muted text-uppercase col">
                                     {{ comment.createdAt|format_datetime('medium', 'short') }}
                                 </small>
+                                {% if comment.updatedAt %}
+                                    <small class="text-end text-muted col">Edited</small>
+                                {% endif %}
                             </div>
 
                             <div class="comment-text">
                                 {{ comment.text|nl2br }}
                             </div>
                         </div>
+                        {% if is_granted('EDIT', comment) %}
+                            <a href="{{ path('app_comment_edit', { id: comment.id }) }}">Edit</a>
+                        {% endif %}
                     </div>
                 {% endfor %}
                 <div>{{ 'nb_of_comments'|trans({count: comments|length}) }}</div>

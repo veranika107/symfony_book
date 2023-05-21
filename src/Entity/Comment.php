@@ -43,6 +43,9 @@ class Comment
     #[ORM\Column(length: 255)]
     private string $state;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $updatedAt = null;
+
     public function __construct(
         string $author,
         string $text,
@@ -121,6 +124,18 @@ class Comment
         return $this;
     }
 
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
     public function getConference(): ?Conference
     {
         return $this->conference;
@@ -155,5 +170,11 @@ class Comment
         $this->state = $state;
 
         return $this;
+    }
+
+    #[ORM\PreUpdate]
+    public function setUpdatedAtValue(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
     }
 }
