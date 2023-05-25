@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api\v1\Comment;
 
+use App\DataTransformer\CommentTransformer;
 use App\Entity\Comment;
 use App\Entity\User;
 use App\Exception\ApiHttpException;
@@ -28,6 +29,7 @@ class CommentController extends AbstractController
     public function __construct(
         private MessageBusInterface $bus,
         private ApiJsonResponseManager $apiJsonResponseManager,
+        private CommentTransformer $commentTransformer,
     ) {
     }
 
@@ -91,13 +93,13 @@ class CommentController extends AbstractController
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_get_comment', methods: ['GET'], format: 'json')]
-    public function view(Comment $comment, Request $request): JsonResponse
+    public function view(Comment $comment): JsonResponse
     {
         if ($comment->getState() !== 'published') {
             throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
-        return $this->apiJsonResponseManager->createApiJsonResponse(data: $this->serializeComment($comment, $request));
+        return $this->apiJsonResponseManager->createApiJsonResponse(data: ($this->commentTransformer)($comment));
     }
 
     #[Route('/api/v1/comments', name: 'api_get_all_comments', methods: ['GET'], format: 'json')]
@@ -119,8 +121,9 @@ class CommentController extends AbstractController
         $data = [];
         $comments = $commentRepository->getPublishedCommentsByConference($conference);
 
+
         foreach ($comments as $comment) {
-            $data[] = $this->serializeComment($comment, $request);
+            $data[] = ($this->commentTransformer)($comment);
         }
 
         return $this->apiJsonResponseManager->createApiJsonResponse(data: $data);
@@ -177,19 +180,6 @@ class CommentController extends AbstractController
         $commentRepository->remove($comment, true);
 
         return $this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is deleted.');
-    }
-
-    private function serializeComment(Comment $comment, Request $request)
-    {
-        return array(
-            'id' => $comment->getId(),
-            'conference_id' => $comment->getConference()->getId(),
-            'author' => $comment->getAuthor(),
-            'email' => $comment->getEmail(),
-            'text' => $comment->getText(),
-            'photo' => $comment->getPhotoFilename() ? $request->getUriForPath('/uploads/photos/' . $comment->getPhotoFilename()) : null,
-            'edited' => (bool)$comment->getUpdatedAt(),
-        );
     }
 
     private function getErrorsFromForm(FormInterface $form)
