@@ -2,16 +2,15 @@
 
 namespace App\DataTransformer;
 
-use App\Entity\Comment;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-class CommentTransformer
+class CommentTransformer implements EntityTransformerInterface
 {
     public function __construct(private RequestStack $requestStack)
     {
     }
 
-    public function __invoke(Comment $comment): array
+    public function __invoke(object $comment): array
     {
         $request = $this->requestStack->getCurrentRequest();
 
