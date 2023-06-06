@@ -3,6 +3,7 @@
 namespace App\Controller\Api\v1\Comment;
 
 use App\DataTransformer\CommentTransformer;
+use App\Dto\Comment\CommentInputDto;
 use App\Entity\Comment;
 use App\Entity\User;
 use App\Exception\ApiHttpException;
@@ -22,6 +23,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Uid\UuidV7;
 
 class CommentController extends AbstractController
@@ -30,12 +32,14 @@ class CommentController extends AbstractController
         private MessageBusInterface $bus,
         private ApiJsonResponseManager $apiJsonResponseManager,
         private CommentTransformer $commentTransformer,
+        private SerializerInterface $serializer
     ) {
     }
 
     #[Route('/api/v1/comment', name: 'api_create_comment', methods: ['POST'], format: 'json')]
     #[isGranted('IS_AUTHENTICATED_FULLY')]
     public function create(
+        CommentInputDto $commentInputDto,
         Request $request,
         CommentRepository $commentRepository,
         ConferenceRepository $conferenceRepository,
@@ -44,7 +48,7 @@ class CommentController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!array_key_exists('conference_id', $data) || !array_key_exists('form_data', $data))
+        if (!array_key_exists('conference_id', $data))
         {
             throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
@@ -54,11 +58,10 @@ class CommentController extends AbstractController
             throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
-        $formData = $data['form_data'];
         $form = $this->createForm(type: CommentFormType::class, options: ['csrf_protection' => false]);
         try {
-            $form->submit($formData);
-        } catch (\TypeError $exception) {
+            $form->submit($this->serializer->normalize($commentInputDto));
+        } catch (\Throwable $exception) {
             throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
@@ -71,11 +74,11 @@ class CommentController extends AbstractController
         $comment = $form->getData();
         $comment->setConference($conference);
         // Check if photo name is sent and if such photo exists on server.
-        if (array_key_exists('photo', $formData)) {
-            if (!file_exists($photoDir . '/' . $formData['photo'])) {
+        if ($commentInputDto->photo !== null) {
+            if (!file_exists($photoDir . '/' . $commentInputDto->photo)) {
                 throw new ApiHttpException(statusCode: Response::HTTP_BAD_REQUEST, violations: ['photo' => ['Photo filename is invalid.']]);
             }
-            $comment->setPhotoFilename($formData['photo']);
+            $comment->setPhotoFilename($commentInputDto->photo);
         }
         $commentRepository->save($comment, true);
 
@@ -89,7 +92,7 @@ class CommentController extends AbstractController
         $reviewUrl = $this->generateUrl('review_comment', ['id' => $comment->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
         $this->bus->dispatch(new CommentMessage($comment->getId(), $reviewUrl, $context));
 
-        return$this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is created and will be moderated.');
+        return $this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is created and will be moderated.');
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_get_comment', methods: ['GET'], format: 'json')]
@@ -133,16 +136,15 @@ class CommentController extends AbstractController
     #[IsGranted(CommentVoter::EDIT, 'comment')]
     public function update(
         Comment $comment,
-        Request $request,
+        CommentInputDto $commentInputDto,
         CommentRepository $commentRepository,
         #[Autowire('%photo_dir%')] string $photoDir,
     ): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
         $form = $this->createForm(type: CommentFormType::class, data: $comment, options: ['csrf_protection' => false]);
 
         try {
-            $form->submit($data);
+            $form->submit($this->serializer->normalize($commentInputDto));
         } catch (\Throwable $exception) {
             throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
@@ -154,11 +156,11 @@ class CommentController extends AbstractController
 
         /** @var Comment $comment */
         $comment = $form->getData();
-        if (array_key_exists('photo', $data)) {
-            if (!file_exists($photoDir . '/' . $data['photo'])) {
+        if ($commentInputDto->photo !== null) {
+            if (!file_exists($photoDir . '/' . $commentInputDto->photo)) {
                 throw new ApiHttpException(statusCode: Response::HTTP_BAD_REQUEST, violations: ['photo' => ['Photo filename is invalid.']]);
             }
-            $comment->setPhotoFilename($data['photo']);
+            $comment->setPhotoFilename($commentInputDto->photo);
         }
         $commentRepository->save($comment, true);
 

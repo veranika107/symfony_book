@@ -26,18 +26,16 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\ValueResolver\Api\DtoValueResolver:
+        tags:
+            - { name: controller.argument_value_resolver, priority: 150 }
+
 when@test:
     services:
         _defaults:
             autowire: true      # Automatically injects dependencies in your services.
             autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
-        App\:
-            resource: '../src/'
-            exclude:
-                - '../src/DependencyInjection/'
-                - '../src/Entity/'
-                - '../src/Kernel.php'
         App\Service\SpamChecker:
             public: true
         App\Repository\CommentRepository:

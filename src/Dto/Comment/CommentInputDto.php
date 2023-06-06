@@ -2,12 +2,14 @@
 
 namespace App\Dto\Comment;
 
-class CommentInputDto
+use App\Dto\InputDtoInterface;
+
+class CommentInputDto implements InputDtoInterface
 {
     public function __construct(
         public readonly string $text,
 
-        public readonly ?string $photoFilename,
+        public readonly ?string $photo = null,
     ) {
     }
 }
