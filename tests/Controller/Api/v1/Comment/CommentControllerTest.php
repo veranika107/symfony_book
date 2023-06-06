@@ -294,8 +294,12 @@ class CommentControllerTest extends WebTestCase
         $commentRepository = $container->get(CommentRepository::class);
         $comment = $commentRepository->findOneBy(['email' => 'mike@example.com']);
 
+        $data = [
+            'text' => 'Nice conference',
+            'photo' => 'test_image.gif',
+        ];
         $header = $this->getAuthorizationHeaderForUser($container, 'user@example.com');
-        $client->jsonRequest(method: 'PUT', uri: '/api/v1/comment/' . $comment->getId(), server: $header);
+        $client->jsonRequest('PUT', '/api/v1/comment/' . $comment->getId(), $data, $header);
         $response = $client->getResponse();
 
         $body = json_decode($response->getContent(), true);
