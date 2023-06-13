@@ -5,7 +5,7 @@ namespace App\Tests\ValueResolver\Api;
 use App\Dto\Comment\CommentInputDto;
 use App\Exception\ApiHttpException;
 use App\ValueResolver\Api\DtoValueResolver;
-use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
@@ -13,8 +13,9 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\UnwrappingDenormalizer;
 use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class DtoValueResolverTest extends TestCase
+class DtoValueResolverTest extends KernelTestCase
 {
     private ValueResolverInterface $dtoValueResolver;
 
@@ -24,7 +25,11 @@ class DtoValueResolverTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dtoValueResolver = new DtoValueResolver(new Serializer([new UnwrappingDenormalizer(), new ObjectNormalizer()], [new JsonEncoder()]));
+        self::bootKernel();
+        $container = static::getContainer();
+
+        $validator = $container->get(ValidatorInterface::class);
+        $this->dtoValueResolver = new DtoValueResolver(new Serializer([new UnwrappingDenormalizer(), new ObjectNormalizer()], [new JsonEncoder()]), $validator);
 
         $this->request = $this->createMock(Request::class);
 
@@ -82,6 +87,17 @@ class DtoValueResolverTest extends TestCase
         $requestBody = [
         ];
         yield 'with_empty_body' => [$requestBody];
+
+        $requestBody = [
+            'text' => '',
+        ];
+        yield 'with_invalid_text' => [$requestBody];
+
+        $requestBody = [
+            'text' => 'Text',
+            'photo' => '.png'
+        ];
+        yield 'with_invalid_photo_filename' => [$requestBody];
     }
 
     /**
