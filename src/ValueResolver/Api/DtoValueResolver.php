@@ -10,11 +10,13 @@ use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\Serializer\Normalizer\UnwrappingDenormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class DtoValueResolver implements ValueResolverInterface
 {
     public function __construct(
         private SerializerInterface $serializer,
+        private ValidatorInterface $validator,
     ) {
     }
 
@@ -40,14 +42,25 @@ class DtoValueResolver implements ValueResolverInterface
         }
 
         try {
-            return [$this->serializer->deserialize(
+            $inputDto = $this->serializer->deserialize(
                 $value,
                 $argumentType,
                 'json',
                 $context ?? [],
-            )];
+            );
         } catch (\Exception $exception) {
             throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
+
+        $errors = $this->validator->validate($inputDto);
+        if ($errors->count() !== 0) {
+            $validationErrors = [];
+            foreach ($errors as $error) {
+                $validationErrors[$error->getPropertyPath()][] = $error->getMessage();
+            }
+            throw new ApiHttpException(statusCode: Response::HTTP_BAD_REQUEST, violations: $validationErrors);
+        }
+
+        return [$inputDto];
     }
 }
