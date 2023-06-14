@@ -42,7 +42,7 @@ class DtoValueResolver implements ValueResolverInterface
         }
 
         try {
-            $commentInputDto = $this->serializer->deserialize(
+            $inputDto = $this->serializer->deserialize(
                 $value,
                 $argumentType,
                 'json',
@@ -52,7 +52,7 @@ class DtoValueResolver implements ValueResolverInterface
             throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
 
-        $errors = $this->validator->validate($commentInputDto);
+        $errors = $this->validator->validate($inputDto);
         if ($errors->count() !== 0) {
             $validationErrors = [];
             foreach ($errors as $error) {
@@ -61,6 +61,6 @@ class DtoValueResolver implements ValueResolverInterface
             throw new ApiHttpException(statusCode: Response::HTTP_BAD_REQUEST, violations: $validationErrors);
         }
 
-        return [$commentInputDto];
+        return [$inputDto];
     }
 }
