@@ -29,15 +29,17 @@ class QueryParameterValueResolverTest extends TestCase
         yield 'float_argument' => [12.345, 'float'];
 
         yield 'bool_argument' => [false, 'bool'];
+
+        yield 'camel_case_argument' => [false, 'bool', 'par_am_et_er', 'ParAmEtEr'];
     }
 
     /**
      * @dataProvider provideTestResolve
      */
-    public function testResolve(mixed $queryParameter, string $argumentType): void
+    public function testResolve(mixed $queryParameter, string $argumentType, string $queryParameterName = 'value', string $argumentName = 'value'): void
     {
-        $request = new Request(['value' => $queryParameter]);
-        $argument = new ArgumentMetadata('value', $argumentType, false, false, false, attributes: [new QueryParameter()]);
+        $request = new Request([$queryParameterName => $queryParameter]);
+        $argument = new ArgumentMetadata($argumentName, $argumentType, false, false, false, attributes: [new QueryParameter()]);
         $value = $this->resolver->resolve($request, $argument);
 
         $this->assertEquals([$queryParameter], $value);

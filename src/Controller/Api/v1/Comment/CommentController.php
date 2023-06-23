@@ -110,7 +110,7 @@ class CommentController extends AbstractController
     public function list(
         CommentRepository $commentRepository,
         ConferenceRepository $conferenceRepository,
-        #[QueryParameter(name: 'conference_id')] string $conferenceId,
+        #[QueryParameter] string $conferenceId,
     ): JsonResponse
     {
         if (!UuidV7::isValid($conferenceId) || !($conference = $conferenceRepository->find($conferenceId))) {

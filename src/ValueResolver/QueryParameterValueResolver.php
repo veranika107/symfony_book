@@ -17,7 +17,7 @@ class QueryParameterValueResolver implements ValueResolverInterface
             return [];
         }
 
-        $name = $attribute->name ?? $argument->getName();
+        $name = $attribute->name ?? strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $argument->getName()));
         if (!$request->query->has($name)) {
             if ($argument->isNullable() || $argument->hasDefaultValue()) {
                 return [];
@@ -26,7 +26,7 @@ class QueryParameterValueResolver implements ValueResolverInterface
             throw new BadRequestException(sprintf('Missing query parameter "%s".', $name));
         }
 
-        $value = $request->query->all()[$name];
+        $value = $request->query->get($name);
 
         $filter = match ($argument->getType()) {
             'string' => \FILTER_DEFAULT,
