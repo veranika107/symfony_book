@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api\v1\Comment;
 
+use App\Attribute\QueryParameter;
 use App\DataTransformer\CommentTransformer;
 use App\Dto\Comment\CommentInputDto;
 use App\Entity\Comment;
@@ -107,16 +108,11 @@ class CommentController extends AbstractController
 
     #[Route('/api/v1/comments', name: 'api_get_all_comments', methods: ['GET'], format: 'json')]
     public function list(
-        Request $request,
         CommentRepository $commentRepository,
         ConferenceRepository $conferenceRepository,
+        #[QueryParameter] string $conferenceId,
     ): JsonResponse
     {
-        $conferenceId = $request->query->get('conference_id');
-        if (!$conferenceId) {
-            throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
-        }
-
         if (!UuidV7::isValid($conferenceId) || !($conference = $conferenceRepository->find($conferenceId))) {
             throw new ApiHttpException(Response::HTTP_BAD_REQUEST);
         }
