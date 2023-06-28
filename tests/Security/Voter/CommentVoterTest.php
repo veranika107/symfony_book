@@ -14,17 +14,17 @@ class CommentVoterTest extends KernelTestCase
 {
     public function provideCases()
     {
-        yield 'anonymous cannot edit' => [
+        yield 'anonymous cannot edit/delete' => [
             null,
             VoterInterface::ACCESS_DENIED
         ];
 
-        yield 'non-owner cannot edit' => [
+        yield 'non-owner cannot edit/delete' => [
             'user@example.com',
             VoterInterface::ACCESS_DENIED
         ];
 
-        yield 'owner can edit' => [
+        yield 'owner can edit/delete' => [
             'mike@example.com',
             VoterInterface::ACCESS_GRANTED
         ];
@@ -49,5 +49,6 @@ class CommentVoterTest extends KernelTestCase
         }
 
         $this->assertSame($expectedVote, $voter->vote($token, $comment, ['EDIT']));
+        $this->assertSame($expectedVote, $voter->vote($token, $comment, ['DELETE']));
     }
 }

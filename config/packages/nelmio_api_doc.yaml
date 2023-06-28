@@ -1,0 +1,130 @@
+nelmio_api_doc:
+    use_validation_groups: true
+    documentation:
+        info:
+            title: Conference Guestbook
+            version: 1.0.0
+        components:
+            schemas:
+                Token:
+                    type: object
+                    properties:
+                        token:
+                            type: string
+                        refresh_token:
+                            $ref: '#/components/schemas/RefreshToken/properties/refresh_token'
+                RefreshToken:
+                    type: object
+                    properties:
+                        refresh_token:
+                            type: string
+                Credentials:
+                    type: object
+                    properties:
+                        email:
+                            type: string
+                        password:
+                            type: string
+                exception:
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: string
+                            maxItems: 0
+                        error:
+                            properties:
+                                type:
+                                    type: string
+                                    description: Error type
+                                title:
+                                    type: string
+                                    description: Error title
+                                status:
+                                    type: integer
+                                    description: Error status code
+                comment:
+                    properties:
+                        id:
+                            description: Comment ID
+                            type: string
+                        conference_id:
+                            description: Conference ID
+                            type: string
+                        author:
+                            description: Name of comment author
+                            type: string
+                        email:
+                            description: Email of comment author
+                            type: string
+                        text:
+                            description: Comment text
+                            type: string
+                        photo:
+                            description: Comment photo filename
+                            type: string
+                        edited:
+                            description: Is comment edited
+                            type: bool
+                conference:
+                    properties:
+                        id:
+                            description: Conference ID
+                            type: string
+                        city:
+                            description: City
+                            type: string
+                        year:
+                            description: Year
+                            type: integer
+                        isInternational:
+                            description: Is international
+                            type: bool
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+
+    areas: # to filter documented areas
+        default:
+            path_patterns:
+                - ^/api(?!/doc$)(?!\/auth\/google$) # Accepts routes under /api except /api/doc
+            documentation:
+                paths:
+                    /api/auth:
+                        post:
+                            tags:
+                                - Token
+                            summary: Get JWT token to login.
+                            requestBody:
+                                description: Request Body
+                                content:
+                                    application/json:
+                                        schema:
+                                            $ref: '#/components/schemas/Credentials'
+                            responses:
+                                '200':
+                                    description: Get JWT token
+                                    content:
+                                        application/json:
+                                            schema:
+                                                $ref: '#/components/schemas/Token'
+                    /api/auth/refresh:
+                        post:
+                            tags:
+                                - Token
+                            summary: Refresh JWT token
+                            requestBody:
+                                description: Request Body
+                                content:
+                                    application/json:
+                                        schema:
+                                            $ref: '#/components/schemas/RefreshToken'
+                            responses:
+                                '200':
+                                    description: Refreshed JWT token
+                                    content:
+                                        application/json:
+                                            schema:
+                                                $ref: '#/components/schemas/Token'

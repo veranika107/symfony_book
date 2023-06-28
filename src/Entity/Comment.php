@@ -68,7 +68,7 @@ class Comment
 
     public function __toString(): string
     {
-        return (string) $this->getEmail();
+        return $this->getEmail();
     }
 
     public function getId(): UuidV7
