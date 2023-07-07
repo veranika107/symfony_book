@@ -12,9 +12,11 @@ class CommentVoter extends Voter
 {
     public const EDIT = 'EDIT';
 
+    public const DELETE = 'DELETE';
+
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return $attribute == self::EDIT
+        return ($attribute == self::EDIT || $attribute == self::DELETE)
             && $subject instanceof Comment;
     }
 
@@ -26,7 +28,7 @@ class CommentVoter extends Voter
             return false;
         }
 
-        if ($attribute == self::EDIT) {
+        if ($attribute == self::EDIT || $attribute == self::DELETE) {
             return $subject->getEmail() === $user->getEmail();
         }
 

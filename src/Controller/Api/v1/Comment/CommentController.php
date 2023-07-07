@@ -6,7 +6,6 @@ use App\Attribute\QueryParameter;
 use App\DataTransformer\CommentTransformer;
 use App\Dto\Comment\CommentInputDto;
 use App\Entity\Comment;
-use App\Entity\User;
 use App\Exception\ApiHttpException;
 use App\Form\CommentFormType;
 use App\Message\CommentMessage;
@@ -14,6 +13,9 @@ use App\Repository\CommentRepository;
 use App\Repository\ConferenceRepository;
 use App\Security\Voter\CommentVoter;
 use App\Service\Api\ApiJsonResponseManager;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Attributes as OA;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,6 +29,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Uid\UuidV7;
 
+#[OA\Tag(name: 'Comment')]
 class CommentController extends AbstractController
 {
     public function __construct(
@@ -39,6 +42,41 @@ class CommentController extends AbstractController
 
     #[Route('/api/v1/comment', name: 'api_create_comment', methods: ['POST'], format: 'json')]
     #[isGranted('IS_AUTHENTICATED_FULLY')]
+    #[OA\RequestBody(
+        content: [
+            new OA\MediaType(
+                mediaType: 'application/json',
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(
+                            property: 'conference_id',
+                            description: 'Conference ID',
+                            type: 'string',
+                        ),
+                        new OA\Property(
+                            property: 'form_data',
+                            ref: new Model(type: CommentInputDto::class)
+                        )
+                    ]
+                ),
+            )
+        ],
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Successfully created'
+    )]
+    #[OA\Response(
+        response: '400',
+        description: 'Bad Request',
+        content: new OA\JsonContent(ref: '#/components/schemas/exception')
+    )]
+    #[OA\Response(
+        response: '401',
+        description: 'Forbidden',
+        content: new OA\JsonContent(ref: '#/components/schemas/exception')
+    )]
+    #[Security(name: 'Bearer')]
     public function create(
         CommentInputDto $commentInputDto,
         Request $request,
@@ -97,6 +135,16 @@ class CommentController extends AbstractController
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_get_comment', methods: ['GET'], format: 'json')]
+    #[OA\Response(
+        response: 200,
+        description: 'Successful response',
+        content: new OA\JsonContent(ref: '#/components/schemas/comment')
+    )]
+    #[OA\Response(
+        response: '400',
+        description: 'Wrong Comment ID',
+        content: new OA\JsonContent(ref: '#/components/schemas/exception')
+    )]
     public function view(Comment $comment): JsonResponse
     {
         if ($comment->getState() !== 'published') {
@@ -107,6 +155,30 @@ class CommentController extends AbstractController
     }
 
     #[Route('/api/v1/comments', name: 'api_get_all_comments', methods: ['GET'], format: 'json')]
+    #[OA\Parameter(name: 'conference_id', description: 'Conference ID', in: 'query')]
+    #[OA\Response(
+        response: 200,
+        description: 'Successful response',
+        content: [
+            new OA\MediaType(
+                mediaType: 'application/json',
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/comment')
+                        )
+                    ]
+                ),
+            )
+        ],
+    )]
+    #[OA\Response(
+        response: '400',
+        description: 'Wrong Conference ID',
+        content: new OA\JsonContent(ref: '#/components/schemas/exception')
+    )]
     public function list(
         CommentRepository $commentRepository,
         ConferenceRepository $conferenceRepository,
@@ -130,6 +202,22 @@ class CommentController extends AbstractController
 
     #[Route('/api/v1/comment/{comment}', name: 'api_update_comment', methods: ['PUT'], format: 'json')]
     #[IsGranted(CommentVoter::EDIT, 'comment')]
+    #[OA\RequestBody(content: new OA\JsonContent(ref: new Model(type: CommentInputDto::class)))]
+    #[OA\Response(
+        response: 200,
+        description: 'Successfully updated'
+    )]
+    #[OA\Response(
+        response: '400',
+        description: 'Bad Request',
+        content: new OA\JsonContent(ref: '#/components/schemas/exception')
+    )]
+    #[OA\Response(
+        response: '401',
+        description: 'Forbidden',
+        content: new OA\JsonContent(ref: '#/components/schemas/exception')
+    )]
+    #[Security(name: 'Bearer')]
     public function update(
         Comment $comment,
         CommentInputDto $commentInputDto,
@@ -164,23 +252,28 @@ class CommentController extends AbstractController
     }
 
     #[Route('/api/v1/comment/{comment}', name: 'api_delete_comment', methods: ['DELETE'], format: 'json')]
-    #[isGranted('IS_AUTHENTICATED_FULLY')]
+    #[IsGranted(CommentVoter::DELETE, 'comment')]
+    #[OA\Response(
+        response: 200,
+        description: 'Successfully deleted'
+    )]
+    #[OA\Response(
+        response: '400',
+        description: 'Wrong Comment ID',
+        content: new OA\JsonContent(ref: '#/components/schemas/exception')
+    )]
+    #[Security(name: 'Bearer')]
     public function delete(
         Comment $comment,
         CommentRepository $commentRepository
     ): JsonResponse
     {
-        /** @var User $currentUser */
-        $currentUser = $this->getUser();
-        if ($comment->getEmail() !== $currentUser->getEmail()) {
-            throw new ApiHttpException(Response::HTTP_FORBIDDEN);
-        }
         $commentRepository->remove($comment, true);
 
         return $this->apiJsonResponseManager->createApiJsonResponse(message: 'The comment is deleted.');
     }
 
-    private function getErrorsFromForm(FormInterface $form)
+    private function getErrorsFromForm(FormInterface $form): array
     {
         $errors = array();
 
